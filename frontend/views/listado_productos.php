@@ -21,14 +21,27 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['accion']) && $_POST['a
     $cantidad = $_POST['cantidad'];
     $precio = $_POST['precio'];
     $id_categoria = $_POST['id_categoria'];  // Obtener el id de la categoría seleccionada
-    
+
+    // Validar si la categoría existe
+    $categoria_sql = "SELECT * FROM categorias WHERE id_categoria = $id_categoria";
+    $categoria_result = $conn->query($categoria_sql);
+
+    if ($categoria_result->num_rows == 0) {
+        echo "<div class='alert alert-danger' role='alert'>Error: La categoría seleccionada no existe.</div>";
+        exit;
+    }
+
     // Subir imagen
     $foto = '';
     if ($_FILES['foto']['name']) {
         $foto = $_FILES['foto']['name'];
-        $target_dir = $_SERVER['DOCUMENT_ROOT'] ."/sistema/backend/uploads/";
+        $target_dir = $_SERVER['DOCUMENT_ROOT'] . "/sistema/backend/uploads/";
         $target_file = $target_dir . basename($foto);
-        move_uploaded_file($_FILES["foto"]["tmp_name"], $target_file);
+        if (move_uploaded_file($_FILES["foto"]["tmp_name"], $target_file)) {
+            // Imagen subida correctamente
+        } else {
+            $foto = '';  // Si no se pudo subir la imagen
+        }
     }
 
     // Agregar producto
@@ -52,15 +65,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['accion']) && $_POST['a
     $cantidad = $_POST['cantidad'];
     $precio = $_POST['precio'];
     $id_categoria = $_POST['id_categoria'];  // Obtener el id de la categoría seleccionada
-    
+
+    // Validar si la categoría existe
+    $categoria_sql = "SELECT * FROM categorias WHERE id_categoria = $id_categoria";
+    $categoria_result = $conn->query($categoria_sql);
+
+    if ($categoria_result->num_rows == 0) {
+        echo "<div class='alert alert-danger' role='alert'>Error: La categoría seleccionada no existe.</div>";
+        exit;
+    }
+
     // Subir imagen si hay nueva
     $foto = '';
     if ($_FILES['foto']['name']) {
         $foto = $_FILES['foto']['name'];
-        // $target_dir = "../../../backend/uploads/";
         $target_dir = $_SERVER['DOCUMENT_ROOT'] . "/sistema/backend/uploads/";
         $target_file = $target_dir . basename($foto);
-        move_uploaded_file($_FILES["foto"]["tmp_name"], $target_file);
+        if (move_uploaded_file($_FILES["foto"]["tmp_name"], $target_file)) {
+            // Imagen subida correctamente
+        }
+    } else {
+        // Si no hay nueva imagen, conservar la imagen anterior
+        $foto = $_POST['foto_actual'];
     }
 
     // Editar producto
@@ -102,14 +128,6 @@ if (isset($_GET['search'])) {
 }
 
 $result = $conn->query($sql);
-
-// Obtener un solo producto si estamos editando
-$producto_editar = null;
-if (isset($_GET['edit'])) {
-    $id_producto_editar = $_GET['edit'];
-    $sql_editar = "SELECT * FROM productos WHERE id_producto = $id_producto_editar";
-    $producto_editar = $conn->query($sql_editar)->fetch_assoc();
-}
 ?>
 
 <!DOCTYPE html>
@@ -118,10 +136,7 @@ if (isset($_GET['edit'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Productos</title>
-
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
-
     <style>
         body {
             background-color: #f4f6f9;
@@ -157,13 +172,13 @@ if (isset($_GET['edit'])) {
         }
 
         .card-img-top {
-            max-width: 50px;
-            max-height: 50px;
+            max-width: 100px;
+            max-height: 100px;
             object-fit: cover;
         }
 
         .table img {
-            width: 50px;
+            width: 120px;
         }
 
         .search-container {
@@ -211,53 +226,18 @@ if (isset($_GET['edit'])) {
         .btn-danger:hover {
             background-color: #c82333;
         }
-
-        .btn-warning {
-            background-color: #ffc107;
-            border: none;
-        }
-
-        .btn-warning:hover {
-            background-color: #e0a800;
-        }
-
-        .modal-header {
-            background-color: #f8f9fa;
-            border-bottom: none;
-        }
-
-        .modal-content {
-            border-radius: 8px;
-        }
-
-        .modal-body {
-            padding: 30px;
-        }
-
-        .modal-footer {
-            border-top: none;
-        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1 class="text-center my-5">Gestión de Productos</h1>
-
-    <!-- Búsqueda de productos -->
-    <div class="search-container">
-        <form method="GET" class="d-flex justify-content-center">
-            <input type="text" class="form-control search-bar" name="search" placeholder="Buscar por nombre..." value="<?php echo htmlspecialchars($search); ?>">
-            <button type="submit" class="btn btn-primary ms-2">Buscar</button>
-        </form>
-    </div>
+    <h1>Gestión de Productos</h1>
 
     <!-- Formulario para agregar producto -->
     <div class="form-container">
         <h2>Agregar Producto</h2>
-        <form action="" method="post" enctype="multipart/form-data">
+        <form action="" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="accion" value="agregar">
-            
             <div class="mb-3">
                 <label for="nombre_producto" class="form-label">Nombre del Producto</label>
                 <input type="text" name="nombre_producto" id="nombre_producto" class="form-control" required>
@@ -270,7 +250,7 @@ if (isset($_GET['edit'])) {
 
             <div class="mb-3">
                 <label for="descripcion" class="form-label">Descripción</label>
-                <textarea name="descripcion" id="descripcion" class="form-control" rows="4" required></textarea>
+                <textarea name="descripcion" id="descripcion" class="form-control" rows="3" required></textarea>
             </div>
 
             <div class="mb-3">
@@ -280,7 +260,15 @@ if (isset($_GET['edit'])) {
 
             <div class="mb-3">
                 <label for="precio" class="form-label">Precio</label>
-                <input type="number" step="0.01" name="precio" id="precio" class="form-control" required>
+                <input type="number" name="precio" id="precio" class="form-control" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="id_categoria" class="form-label">Categoría</label>
+                <select name="id_categoria" id="id_categoria" class="form-control" required>
+                    <option value="1">Categoría 1</option>
+                    <option value="2">Categoría 2</option>
+                </select>
             </div>
 
             <div class="mb-3">
@@ -288,74 +276,66 @@ if (isset($_GET['edit'])) {
                 <input type="file" name="foto" id="foto" class="form-control">
             </div>
 
-            <div class="mb-3">
-                <label for="id_categoria" class="form-label">Categoría</label>
-                <select name="id_categoria" id="id_categoria" class="form-control" required>
-                    <option value="">Selecciona una categoría</option>
-                    <?php
-                    // Obtener las categorías
-                    $categorias_result = $conn->query("SELECT * FROM categorias");
-                    while ($categoria = $categorias_result->fetch_assoc()) {
-                        echo "<option value='{$categoria['id_categoria']}'>{$categoria['nombre_categoria']}</option>";
-                    }
-                    ?>
-                </select>
-            </div>
+            <button type="submit" class="btn btn-primary">Agregar Producto</button>
+        </form>
+    </div>
 
-            <button type="submit" class="btn btn-success">Agregar Producto</button>
+    <!-- Barra de búsqueda -->
+    <div class="search-container">
+        <form class="search-bar">
+            <input type="text" class="form-control" placeholder="Buscar producto" name="search" value="<?= $search ?>">
+            <button type="submit" class="btn btn-primary">Buscar</button>
         </form>
     </div>
 
     <!-- Tabla de productos -->
     <div class="table-container">
-        <table class="table table-striped table-bordered">
+        <table class="table table-bordered table-hover">
             <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nombre</th>
-                    <th>Tipo de Presentación</th>
-                    <th>Descripción</th>
-                    <th>Cantidad</th>
-                    <th>Precio</th>
-                    <th>Foto</th>
-                    <th>Acciones</th>
-                </tr>
+            <tr>
+                <th>ID</th>
+                <th>Producto</th>
+                <th>Presentación</th>
+                <th>Descripción</th>
+                <th>Cantidad</th>
+                <th>Precio</th>
+                <th>Foto</th>
+                <th>Categoría</th>
+                <th>Acciones</th>
+            </tr>
             </thead>
             <tbody>
-                <?php
-                if ($result->num_rows > 0) {
-                    while ($row = $result->fetch_assoc()) {
-                        echo "<tr>
-                                <td>{$row['id_producto']}</td>
-                                <td>{$row['nombre_producto']}</td>
-                                <td>{$row['tipo_de_presentacion']}</td>
-                                <td>{$row['descripcion']}</td>
-                                <td>{$row['cantidad']}</td>
-                                <td>{$row['precio']}</td>
-                                <td><img src='{$_SERVER['DOCUMENT_ROOT']}/sistema/backend/uploads/{$row['foto']}' alt='Foto producto' class='card-img-top'></td>
-                                <td>
-                                    <button type='button' class='btn btn-warning btn-sm' data-bs-toggle='modal' data-bs-target='#editModal' data-id='{$row['id_producto']}'
-                                        data-nombre='{$row['nombre_producto']}' 
-                                        data-presentacion='{$row['tipo_de_presentacion']}'
-                                        data-descripcion='{$row['descripcion']}'
-                                        data-cantidad='{$row['cantidad']}'
-                                        data-precio='{$row['precio']}'
-                                        data-foto='{$row['foto']}'
-                                        data-categoria='{$row['id_categoria']}'>Editar</button>
-                                    <a href='?delete={$row['id_producto']}' class='btn btn-danger btn-sm'>Eliminar</a>
-                                </td>
-                            </tr>";
-                    }
-                } else {
-                    echo "<tr><td colspan='8' class='text-center'>No hay productos disponibles</td></tr>";
-                }
-                ?>
+            <?php while ($row = $result->fetch_assoc()) { ?>
+                <tr>
+                    <td><?= $row['id_producto'] ?></td>
+                    <td><?= $row['nombre_producto'] ?></td>
+                    <td><?= $row['tipo_de_presentacion'] ?></td>
+                    <td><?= $row['descripcion'] ?></td>
+                    <td><?= $row['cantidad'] ?></td>
+                    <td><?= $row['precio'] ?></td>
+                    <td><img src="/sistema/backend/uploads/<?= $row['foto'] ?>" class="img-thumbnail" alt="Foto Producto"></td>
+                    <td><?= $row['id_categoria'] ?></td>
+                    <td>
+                        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#editModal"
+                                data-id="<?= $row['id_producto'] ?>"
+                                data-nombre="<?= $row['nombre_producto'] ?>"
+                                data-tipo="<?= $row['tipo_de_presentacion'] ?>"
+                                data-descripcion="<?= $row['descripcion'] ?>"
+                                data-cantidad="<?= $row['cantidad'] ?>"
+                                data-precio="<?= $row['precio'] ?>"
+                                data-categoria="<?= $row['id_categoria'] ?>"
+                                data-foto="<?= $row['foto'] ?>">Editar
+                        </button>
+                        <a href="?delete=<?= $row['id_producto'] ?>" class="btn btn-danger">Eliminar</a>
+                    </td>
+                </tr>
+            <?php } ?>
             </tbody>
         </table>
     </div>
 </div>
 
-<!-- Modal para editar producto -->
+<!-- Modal de Edición -->
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -364,80 +344,76 @@ if (isset($_GET['edit'])) {
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form action="" method="post" enctype="multipart/form-data">
+                <form id="editForm" action="" method="POST" enctype="multipart/form-data">
                     <input type="hidden" name="accion" value="editar">
-                    <input type="hidden" name="id_producto" id="id_producto">
-
+                    <input type="hidden" name="id_producto" id="edit-id_producto">
+                    <input type="hidden" name="foto_actual" id="edit-foto_actual">
+                    
                     <div class="mb-3">
-                        <label for="nombre_producto_modal" class="form-label">Nombre del Producto</label>
-                        <input type="text" name="nombre_producto" id="nombre_producto_modal" class="form-control" required>
+                        <label for="edit-nombre_producto" class="form-label">Nombre del Producto</label>
+                        <input type="text" name="nombre_producto" id="edit-nombre_producto" class="form-control" required>
                     </div>
 
                     <div class="mb-3">
-                        <label for="tipo_presentacion_modal" class="form-label">Tipo de Presentación</label>
-                        <input type="text" name="tipo_presentacion" id="tipo_presentacion_modal" class="form-control" required>
+                        <label for="edit-tipo_presentacion" class="form-label">Tipo de Presentación</label>
+                        <input type="text" name="tipo_presentacion" id="edit-tipo_presentacion" class="form-control" required>
                     </div>
 
                     <div class="mb-3">
-                        <label for="descripcion_modal" class="form-label">Descripción</label>
-                        <textarea name="descripcion" id="descripcion_modal" class="form-control" rows="4" required></textarea>
+                        <label for="edit-descripcion" class="form-label">Descripción</label>
+                        <textarea name="descripcion" id="edit-descripcion" class="form-control" rows="3" required></textarea>
                     </div>
 
                     <div class="mb-3">
-                        <label for="cantidad_modal" class="form-label">Cantidad</label>
-                        <input type="number" name="cantidad" id="cantidad_modal" class="form-control" required>
+                        <label for="edit-cantidad" class="form-label">Cantidad</label>
+                        <input type="number" name="cantidad" id="edit-cantidad" class="form-control" required>
                     </div>
 
                     <div class="mb-3">
-                        <label for="precio_modal" class="form-label">Precio</label>
-                        <input type="number" step="0.01" name="precio" id="precio_modal" class="form-control" required>
+                        <label for="edit-precio" class="form-label">Precio</label>
+                        <input type="number" name="precio" id="edit-precio" class="form-control" required>
                     </div>
 
                     <div class="mb-3">
-                        <label for="foto_modal" class="form-label">Foto</label>
-                        <input type="file" name="foto" id="foto_modal" class="form-control">
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="id_categoria_modal" class="form-label">Categoría</label>
-                        <select name="id_categoria" id="id_categoria_modal" class="form-control" required>
-                            <option value="">Selecciona una categoría</option>
-                            <?php
-                            // Obtener las categorías
-                            $categorias_result = $conn->query("SELECT * FROM categorias");
-                            while ($categoria = $categorias_result->fetch_assoc()) {
-                                echo "<option value='{$categoria['id_categoria']}'>{$categoria['nombre_categoria']}</option>";
-                            }
-                            ?>
+                        <label for="edit-id_categoria" class="form-label">Categoría</label>
+                        <select name="id_categoria" id="edit-id_categoria" class="form-control" required>
+                            <option value="1">Categoría 1</option>
+                            <option value="2">Categoría 2</option>
                         </select>
                     </div>
 
-                    <button type="submit" class="btn btn-warning">Actualizar Producto</button>
+                    <div class="mb-3">
+                        <label for="edit-foto" class="form-label">Foto</label>
+                        <input type="file" name="foto" id="edit-foto" class="form-control">
+                        <img src="" id="edit-img" alt="Foto Producto" class="img-thumbnail mt-2" style="max-width: 100px;">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Bootstrap JS y dependencias -->
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.min.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // Llenar modal con los datos del producto seleccionado para editar
-    var editButtons = document.querySelectorAll('[data-bs-toggle="modal"]');
-    editButtons.forEach(function(button) {
-        button.addEventListener('click', function() {
-            var modal = new bootstrap.Modal(document.getElementById('editModal'));
-            document.getElementById('id_producto').value = button.getAttribute('data-id');
-            document.getElementById('nombre_producto_modal').value = button.getAttribute('data-nombre');
-            document.getElementById('tipo_presentacion_modal').value = button.getAttribute('data-presentacion');
-            document.getElementById('descripcion_modal').value = button.getAttribute('data-descripcion');
-            document.getElementById('cantidad_modal').value = button.getAttribute('data-cantidad');
-            document.getElementById('precio_modal').value = button.getAttribute('data-precio');
-            document.getElementById('id_categoria_modal').value = button.getAttribute('data-categoria');
-            modal.show();
-        });
+    // Cargar datos en el modal de edición
+    const editModal = document.getElementById('editModal');
+    editModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+
+        document.getElementById('edit-id_producto').value = button.getAttribute('data-id');
+        document.getElementById('edit-nombre_producto').value = button.getAttribute('data-nombre');
+        document.getElementById('edit-tipo_presentacion').value = button.getAttribute('data-tipo');
+        document.getElementById('edit-descripcion').value = button.getAttribute('data-descripcion');
+        document.getElementById('edit-cantidad').value = button.getAttribute('data-cantidad');
+        document.getElementById('edit-precio').value = button.getAttribute('data-precio');
+        document.getElementById('edit-id_categoria').value = button.getAttribute('data-categoria');
+        document.getElementById('edit-foto_actual').value = button.getAttribute('data-foto');
+        
+        const imgSrc = "/sistema/backend/uploads/" + button.getAttribute('data-foto');
+        const img = document.getElementById('edit-img');
+        img.src = imgSrc;
     });
 </script>
 
