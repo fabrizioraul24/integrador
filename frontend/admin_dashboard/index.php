@@ -117,11 +117,11 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] != 1) {
         <i class="bi bi-box"></i><span>Listado de Productos</span>
     </a>
 </li>
-          <li>
-            <a href="#">
-              <i class="bi bi-circle"></i><span>Registro de Compras</span>
-            </a>
-          </li>
+<li class="nav-item">
+    <a class="nav-link collapsed" href="../views/traspaso.php">
+        <i class="bi bi-box"></i><span>Traspaso de Productos</span>
+    </a>
+</li>
           <li>
             <a href="#">
               <i class="bi bi-circle"></i><span>Registro de Ventas</span>
