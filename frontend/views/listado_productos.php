@@ -229,7 +229,6 @@ $result = $conn->query($sql);
     </style>
 </head>
 <body>
-
 <div class="container">
     <h1>Gestión de Productos</h1>
 
@@ -266,8 +265,12 @@ $result = $conn->query($sql);
             <div class="mb-3">
                 <label for="id_categoria" class="form-label">Categoría</label>
                 <select name="id_categoria" id="id_categoria" class="form-control" required>
-                    <option value="1">Categoría 1</option>
-                    <option value="2">Categoría 2</option>
+                    <?php
+                    $categorias = $conn->query("SELECT * FROM categorias");
+                    while ($categoria = $categorias->fetch_assoc()) {
+                        echo "<option value='{$categoria['id_categoria']}'>{$categoria['nombre_categoria']}</option>";
+                    }
+                    ?>
                 </select>
             </div>
 
@@ -314,7 +317,12 @@ $result = $conn->query($sql);
                     <td><?= $row['cantidad'] ?></td>
                     <td><?= $row['precio'] ?></td>
                     <td><img src="/sistema/backend/uploads/<?= $row['foto'] ?>" class="img-thumbnail" alt="Foto Producto"></td>
-                    <td><?= $row['id_categoria'] ?></td>
+                    <?php
+                    $categoria_sql = "SELECT nombre_categoria FROM categorias WHERE id_categoria = {$row['id_categoria']}";
+                    $categoria_result = $conn->query($categoria_sql);
+                    $categoria_nombre = $categoria_result->fetch_assoc()['nombre_categoria'] ?? 'Sin categoría';
+                    ?>
+                    <td><?= $categoria_nombre ?></td>
                     <td>
                         <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#editModal"
                                 data-id="<?= $row['id_producto'] ?>"
@@ -377,8 +385,12 @@ $result = $conn->query($sql);
                     <div class="mb-3">
                         <label for="edit-id_categoria" class="form-label">Categoría</label>
                         <select name="id_categoria" id="edit-id_categoria" class="form-control" required>
-                            <option value="1">Categoría 1</option>
-                            <option value="2">Categoría 2</option>
+                            <?php
+                            $categorias = $conn->query("SELECT * FROM categorias");
+                            while ($categoria = $categorias->fetch_assoc()) {
+                                echo "<option value='{$categoria['id_categoria']}'>{$categoria['nombre_categoria']}</option>";
+                            }
+                            ?>
                         </select>
                     </div>
 

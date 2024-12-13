@@ -96,12 +96,12 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] != 1) {
 </li>
           <li>
             <a href="#">
-              <i class="bi bi-circle"></i><span>listado de usuarios</span>
+              <i class="bi bi-circle"></i><span>nada</span>
             </a>
           </li>
           <li>
             <a href="#">
-              <i class="bi bi-circle"></i><span>Reporte de Usuarios</span>
+              <i class="bi bi-circle"></i><span>nada</span>
             </a>
           </li>
         </ul>
@@ -114,7 +114,7 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] != 1) {
         <ul id="comercial-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
         <li class="nav-item">
     <a class="nav-link collapsed" href="../views/listado_productos.php">
-        <i class="bi bi-box"></i><span>Listado de Productos</span>
+        <i class="bi bi-box"></i><span>ABM y Listado de Productos</span>
     </a>
 </li>
 <li class="nav-item">
@@ -198,21 +198,49 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] != 1) {
         </div>
 
         <div class="col-lg-3 col-md-6">
-          <div class="card info-card products-card">
-            <div class="card-body">
-              <h5 class="card-title">Cantidad de Productos</h5>
-              <div class="d-flex align-items-center">
+
+
+    <div class="card info-card products-card">
+        <div class="card-body">
+            <h5 class="card-title">Cantidad de Productos</h5>
+            <div class="d-flex align-items-center">
                 <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-                  <i class="bi bi-box"></i>
+                    <i class="bi bi-box"></i>
                 </div>
                 <div class="ps-3">
-                  <h6>654</h6>
-                  <span class="text-muted small pt-2 ps-1">en inventario</span>
+                    <?php
+                    // Conexión a la base de datos
+                    $host = '127.0.0.1';
+                    $user = 'root';
+                    $pass = '';
+                    $db = 'noah';
+                    $port = 3307;
+
+                    $conn = new mysqli($host, $user, $pass, $db, $port);
+
+                    if ($conn->connect_error) {
+                        die("Error de conexión: " . $conn->connect_error);
+                    }
+
+                    // Consulta para obtener la cantidad total de productos
+                    $query = "SELECT SUM(cantidad) AS total_productos FROM productos";
+                    $result = $conn->query($query);
+                    $total_productos = 0;
+
+                    if ($result && $row = $result->fetch_assoc()) {
+                        $total_productos = $row['total_productos'];
+                    }
+
+                    $conn->close();
+                    ?>
+                    <h6><?php echo $total_productos; ?></h6>
+                    <span class="text-muted small pt-2 ps-1">en inventario</span>
                 </div>
-              </div>
             </div>
-          </div>
         </div>
+    </div>
+</div>
+
 
         <div class="col-lg-3 col-md-6">
           <div class="card info-card customers-card">
@@ -264,10 +292,10 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] != 1) {
                       {
                         type: 'pie',
                         data: [
-                          { value: 40, name: 'Productos' },
-                          { value: 30, name: 'Clientes' },
-                          { value: 20, name: 'Órdenes' },
-                          { value: 10, name: 'Otros' }
+                          { value: 40, name: 'Leche' },
+                          { value: 30, name: 'Mantequilla' },
+                          { value: 20, name: 'Jugos' },
+                          { value: 10, name: 'Mermelada' }
                         ]
                       }
                     ]
