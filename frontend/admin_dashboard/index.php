@@ -94,11 +94,11 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] != 1) {
         <i class="bi bi-circle"></i><span>ABM de Usuarios</span>
     </a>
 </li>
-          <li>
-            <a href="#">
-              <i class="bi bi-circle"></i><span>nada</span>
-            </a>
-          </li>
+<li class="nav-item">
+    <a class="nav-link <?= basename($_SERVER['PHP_SELF']) === 'clientes.php' ? 'active' : ''; ?>" href="../views/clientes.php">
+        <i class="bi bi-circle"></i><span>ABM de Clientes</span>
+    </a>
+</li>
           <li>
             <a href="#">
               <i class="bi bi-circle"></i><span>nada</span>
@@ -241,23 +241,47 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] != 1) {
     </div>
 </div>
 
-
-        <div class="col-lg-3 col-md-6">
-          <div class="card info-card customers-card">
-            <div class="card-body">
-              <h5 class="card-title">Clientes Totales</h5>
-              <div class="d-flex align-items-center">
+<div class="col-lg-3 col-md-6">
+    <div class="card info-card customers-card">
+        <div class="card-body">
+            <h5 class="card-title">Clientes Totales</h5>
+            <div class="d-flex align-items-center">
                 <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-                  <i class="bi bi-people"></i>
+                    <i class="bi bi-people"></i>
                 </div>
                 <div class="ps-3">
-                  <h6>567</h6>
-                  <span class="text-muted small pt-2 ps-1">registrados</span>
+                    <?php
+                    // Conexión a la base de datos
+                    $host = '127.0.0.1';
+                    $user = 'root';
+                    $pass = '';
+                    $db = 'noah';
+                    $port = 3307;
+
+                    $conn = new mysqli($host, $user, $pass, $db, $port);
+
+                    if ($conn->connect_error) {
+                        die("Error de conexión: " . $conn->connect_error);
+                    }
+
+                    // Consulta para contar la cantidad total de clientes
+                    $query = "SELECT COUNT(*) AS total_clientes FROM clientes";
+                    $result = $conn->query($query);
+                    $total_clientes = 0;
+
+                    if ($result && $row = $result->fetch_assoc()) {
+                        $total_clientes = $row['total_clientes'];
+                    }
+
+                    $conn->close();
+                    ?>
+                    <h6><?php echo $total_clientes; ?></h6>
+                    <span class="text-muted small pt-2 ps-1">registrados</span>
                 </div>
-              </div>
             </div>
-          </div>
         </div>
+    </div>
+</div>
 
         <!-- Gráficos -->
         <div class="col-lg-6">
