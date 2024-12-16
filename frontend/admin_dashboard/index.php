@@ -85,68 +85,42 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] != 1) {
       </li>
 
       <li class="nav-item">
-        <a class="nav-link collapsed" data-bs-target="#inventarios-nav" data-bs-toggle="collapse" href="#">
-          <i class="bi bi-box"></i><span>Usuarios</span><i class="bi bi-chevron-down ms-auto"></i>
+        <a class="nav-link collapsed" data-bs-target="#comercial-nav" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-person-circle"></i><span>Personal</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
-        <ul id="inventarios-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+        <ul id="comercial-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
         <li class="nav-item">
     <a class="nav-link <?= basename($_SERVER['PHP_SELF']) === 'listado_usuarios.php' ? 'active' : ''; ?>" href="../views/listado_usuarios.php">
         <i class="bi bi-circle"></i><span>ABM de Usuarios</span>
     </a>
 </li>
 <li class="nav-item">
-    <a class="nav-link <?= basename($_SERVER['PHP_SELF']) === 'clientes.php' ? 'active' : ''; ?>" href="../views/clientes.php">
+    <a class="nav-link collapsed" href="../views/clientes.php">
         <i class="bi bi-circle"></i><span>ABM de Clientes</span>
     </a>
-</li>
-          <li>
-            <a href="#">
-              <i class="bi bi-circle"></i><span>nada</span>
-            </a>
-          </li>
-        </ul>
-      </li>
+    </li>
 
-      <li class="nav-item">
+    </ul>
+    <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#comercial-nav" data-bs-toggle="collapse" href="#">
-          <i class="bi bi-shop"></i><span>Comercial</span><i class="bi bi-chevron-down ms-auto"></i>
+          <i class="bi bi-shop-window"></i><span>Comercial</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
         <ul id="comercial-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
         <li class="nav-item">
     <a class="nav-link collapsed" href="../views/listado_productos.php">
-        <i class="bi bi-box"></i><span>ABM y Listado de Productos</span>
+        <i class="bi bi-circle"></i><span>ABM de Productos</span>
     </a>
 </li>
 <li class="nav-item">
     <a class="nav-link collapsed" href="../views/traspaso.php">
-        <i class="bi bi-box"></i><span>Traspaso de Productos</span>
+        <i class="bi bi-circle"></i><span>Traspaso de Productos</span>
     </a>
 </li>
-          <li>
-            <a href="#">
-              <i class="bi bi-circle"></i><span>Registro de Ventas</span>
-            </a>
-          </li>
-        </ul>
-      </li>
-
-      <li class="nav-item">
-        <a class="nav-link collapsed" data-bs-target="#reportes-nav" data-bs-toggle="collapse" href="#">
-          <i class="bi bi-bar-chart"></i><span>Reportes en Gráficos</span><i class="bi bi-chevron-down ms-auto"></i>
-        </a>
-        <ul id="reportes-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-          <li>
-            <a href="#">
-              <i class="bi bi-circle"></i><span>Ventas por Usuario</span>
-            </a>
-          </li>
-          <li>
-            <a href="#">
-              <i class="bi bi-circle"></i><span>Productos por Categoría</span>
-            </a>
-          </li>
-        </ul>
-      </li>
+<li class="nav-item">
+    <a class="nav-link collapsed" href="../views/ventas_admin.php">
+        <i class="bi bi-circle"></i><span>Ventas Admin</span>
+    </a>
+    </li>
 
     </ul>
   </aside>
@@ -161,45 +135,169 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] != 1) {
       <div class="row">
 
         <!-- Tarjetas de Información -->
-        <div class="col-lg-3 col-md-6">
-          <div class="card info-card sales-card">
-            <div class="card-body">
-              <h5 class="card-title">Ventas Totales</h5>
-              <div class="d-flex align-items-center">
-                <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-                  <i class="bi bi-cart"></i>
-                </div>
-                <div class="ps-3">
-                  <h6>1,234</h6>
-                  <span class="text-success small pt-1 fw-bold">+15%</span>
-                  <span class="text-muted small pt-2 ps-1">incremento</span>
-                </div>
-              </div>
-            </div>
-          </div>
+        <?php
+// Conexión a la base de datos
+$conn = new mysqli('127.0.0.1','root','','noah',3307);
+$conn->set_charset("utf8mb4");
+if ($conn->connect_error) {
+    die("Error de conexión: " . $conn->connect_error);
+}
+
+// Total de ventas acumuladas (Contamos el número total de ventas)
+$sql_total = "SELECT COUNT(*) AS total_ventas FROM ventas";
+$res_total = $conn->query($sql_total);
+$total_ventas = 0;
+if ($res_total && $row = $res_total->fetch_assoc()) {
+    $total_ventas = $row['total_ventas'] ?? 0;
+}
+
+// Ventas mes actual (Contamos el número de ventas del mes actual)
+$sql_mes_actual = "
+    SELECT COUNT(*) AS total_mes_actual
+    FROM ventas
+    WHERE MONTH(fecha_venta) = MONTH(CURDATE())
+    AND YEAR(fecha_venta) = YEAR(CURDATE())";
+$res_mes_actual = $conn->query($sql_mes_actual);
+$ventas_mes_actual = 0;
+if ($res_mes_actual && $row = $res_mes_actual->fetch_assoc()) {
+    $ventas_mes_actual = $row['total_mes_actual'] ?? 0;
+}
+
+// Ventas mes anterior (Contamos el número de ventas del mes anterior)
+$sql_mes_anterior = "
+    SELECT COUNT(*) AS total_mes_anterior
+    FROM ventas
+    WHERE MONTH(fecha_venta) = MONTH(CURDATE() - INTERVAL 1 MONTH)
+    AND YEAR(fecha_venta) = YEAR(CURDATE() - INTERVAL 1 MONTH)";
+$res_mes_anterior = $conn->query($sql_mes_anterior);
+$ventas_mes_anterior = 0;
+if ($res_mes_anterior && $row = $res_mes_anterior->fetch_assoc()) {
+    $ventas_mes_anterior = $row['total_mes_anterior'] ?? 0;
+}
+
+// Incremento porcentual
+$incremento = 0;
+if ($ventas_mes_anterior > 0) {
+    $incremento = (($ventas_mes_actual - $ventas_mes_anterior) / $ventas_mes_anterior) * 100;
+}
+
+// Formatear incremento
+$incremento_formato = number_format($incremento, 2, '.', ',');
+
+$conn->close();
+?>
+
+<div class="col-lg-3 col-md-6">
+  <div class="card info-card sales-card">
+    <div class="card-body">
+      <h5 class="card-title">Ventas Totales</h5>
+      <div class="d-flex align-items-center">
+        <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+          <i class="bi bi-cart"></i>
         </div>
-
-        <div class="col-lg-3 col-md-6">
-          <div class="card info-card revenue-card">
-            <div class="card-body">
-              <h5 class="card-title">Ingresos</h5>
-              <div class="d-flex align-items-center">
-                <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-                  <i class="bi bi-currency-dollar"></i>
-                </div>
-                <div class="ps-3">
-                  <h6>$5,678</h6>
-                  <span class="text-success small pt-1 fw-bold">+10%</span>
-                  <span class="text-muted small pt-2 ps-1">incremento</span>
-                </div>
-              </div>
-            </div>
-          </div>
+        <div class="ps-3">
+          <h6><?php echo $total_ventas; ?> ventas</h6>
+          <?php if ($incremento >= 0): ?>
+            <span class="text-success small pt-1 fw-bold">+<?php echo $incremento_formato; ?>%</span>
+          <?php else: ?>
+            <span class="text-danger small pt-1 fw-bold"><?php echo $incremento_formato; ?>%</span>
+          <?php endif; ?>
+          <span class="text-muted small pt-2 ps-1">incremento</span>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-        <div class="col-lg-3 col-md-6">
+
+<?php
+// Conexión a la base de datos
+$host = '127.0.0.1';
+$user = 'root';
+$pass = '';
+$db   = 'noah';
+$port = 3307;
+
+$conn = new mysqli($host, $user, $pass, $db, $port);
+$conn->set_charset("utf8mb4");
+if ($conn->connect_error) {
+    die("Error de conexión: " . $conn->connect_error);
+}
+
+// Obtener total de ingresos (todas las ventas)
+$sql_total = "SELECT SUM(total) AS total_ingresos FROM ventas";
+$res_total = $conn->query($sql_total);
+$total_ingresos = 0;
+if ($res_total && $row = $res_total->fetch_assoc()) {
+    $total_ingresos = (float)$row['total_ingresos'];
+}
+
+// Ingresos mes actual
+$sql_mes_actual = "
+    SELECT SUM(total) AS ingresos_mes_actual
+    FROM ventas
+    WHERE MONTH(fecha_venta) = MONTH(CURDATE())
+    AND YEAR(fecha_venta) = YEAR(CURDATE())";
+$res_mes_actual = $conn->query($sql_mes_actual);
+$ingresos_mes_actual = 0;
+if ($res_mes_actual && $row = $res_mes_actual->fetch_assoc()) {
+    $ingresos_mes_actual = (float)$row['ingresos_mes_actual'];
+}
+
+// Ingresos mes anterior
+$sql_mes_anterior = "
+    SELECT SUM(total) AS ingresos_mes_anterior
+    FROM ventas
+    WHERE MONTH(fecha_venta) = MONTH(CURDATE() - INTERVAL 1 MONTH)
+    AND YEAR(fecha_venta) = YEAR(CURDATE() - INTERVAL 1 MONTH)";
+$res_mes_anterior = $conn->query($sql_mes_anterior);
+$ingresos_mes_anterior = 0;
+if ($res_mes_anterior && $row = $res_mes_anterior->fetch_assoc()) {
+    $ingresos_mes_anterior = (float)$row['ingresos_mes_anterior'];
+}
+
+// Calcular incremento porcentual
+$incremento = 0;
+if ($ingresos_mes_anterior > 0) {
+    $incremento = (($ingresos_mes_actual - $ingresos_mes_anterior) / $ingresos_mes_anterior) * 100;
+}
+
+// Formatear los valores
+$total_ingresos_formato = '$' . number_format($total_ingresos, 2, '.', ',');
+$incremento_formato = number_format($incremento, 2, '.', ',');
+
+$conn->close();
+?>
+
+<div class="col-lg-3 col-md-6">
+  <div class="card info-card revenue-card">
+    <div class="card-body">
+      <h5 class="card-title">Ingresos</h5>
+      <div class="d-flex align-items-center">
+        <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+          <i class="bi bi-currency-dollar"></i>
+        </div>
+        <div class="ps-3">
+          <!-- Mostrar el total de ingresos -->
+          <h6><?php echo $total_ingresos_formato; ?></h6>
+
+          <!-- Mostrar incremento con color según el valor -->
+          <?php if ($incremento >= 0): ?>
+            <span class="text-success small pt-1 fw-bold">+<?php echo $incremento_formato; ?>%</span>
+          <?php else: ?>
+            <span class="text-danger small pt-1 fw-bold"><?php echo $incremento_formato; ?>%</span>
+          <?php endif; ?>
+          
+          <span class="text-muted small pt-2 ps-1">incremento</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 
+
+<div class="col-lg-3 col-md-6">
     <div class="card info-card products-card">
         <div class="card-body">
             <h5 class="card-title">Cantidad de Productos</h5>
@@ -240,6 +338,7 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] != 1) {
         </div>
     </div>
 </div>
+
 
 <div class="col-lg-3 col-md-6">
     <div class="card info-card customers-card">
