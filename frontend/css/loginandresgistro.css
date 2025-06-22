@@ -1,0 +1,134 @@
+/* General Body Styles */
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: linear-gradient(-45deg, #1A2865, #394480, #4E6BAF, #394480);
+    background-size: 400% 400%;
+    animation: gradient 15s ease infinite;
+    color: #ffffff;
+}
+
+/* Degradado dinámico */
+@keyframes gradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Login and Register Container */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    max-width: 100%;
+    padding: 20px;
+}
+
+/* Login and Register Box */
+.login-box {
+    background: #ffffff;
+    color: #333333;
+    width: 100%;
+    max-width: 400px;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    text-align: center;
+}
+
+/* Form Fields */
+input[type="text"],
+input[type="password"],
+input[type="email"] {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+/* Buttons */
+.btn {
+    background: #1A2865;
+    color: #ffffff;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.3s ease;
+    width: 100%;
+}
+
+.btn:hover {
+    background: #394480;
+}
+
+.btn-link {
+    background: none;
+    border: none;
+    color: #1A2865;
+    text-decoration: none;
+    font-size: 14px;
+    margin-top: 10px;
+    display: inline-block;
+}
+
+.btn-link:hover {
+    text-decoration: underline;
+}
+
+/* Additional Links */
+.extra-links {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 14px;
+
+}
+
+/* Mensajes de error y éxito */
+#message-box {
+    display: none; /* Ocultar por defecto */
+    width: 100%;
+    max-width: 400px;
+    padding: 15px;
+    margin: 10px auto;
+    border-radius: 5px;
+    text-align: center;
+    font-size: 16px;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Estilo para mensajes de error */
+#message-box.error {
+    background-color: #f8d7da;
+    color: #842029;
+    border: 1px solid #f5c2c7;
+}
+
+/* Estilo para mensajes de éxito */
+#message-box.success {
+    background-color: #d1e7dd;
+    color: #0f5132;
+    border: 1px solid #badbcc;
+}
+
+/* Animación de aparición */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

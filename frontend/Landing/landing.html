@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pil Andina - Productos Lácteos de Calidad</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4e6baf',
+                        'primary-dark': '#3a5186',
+                        'primary-light': '#86acd4',
+                        panel: '#f8fafc', // Blanco cálido
+                        accent: '#42568b',
+                        'soft-red': '#fee2e2',
+                        'text-soft-red': '#b91c1c',
+                        'text-primary': '#1e293b', // Texto oscuro principal
+                        'text-secondary': '#64748b', // Texto secundario
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in',
+                        'slide-up': 'slideUp 0.4s ease-out',
+                        'bounce-light': 'bounceLight 2s infinite',
+                        'pulse-glow': 'pulseGlow 2s infinite',
+                    },
+                    backgroundImage: {
+                        'gradient-primary': 'linear-gradient(135deg, #42568b 0%, #86acd4 100%)',
+                        'gradient-card': 'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes bounceLight {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 20px rgba(78, 107, 175, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(78, 107, 175, 0.6); }
+        }
+        
+        .glass-effect {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        }
+        
+        .text-shadow {
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 3px;
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        .swiper-slide {
+            display: flex;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body class="bg-panel">
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 w-full bg-panel shadow-lg z-50 glass-effect">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <div class="relative">
+                        <div class="w-10 h-10 bg-gradient-primary rounded-full flex items-center justify-center shadow-lg animate-pulse-glow">
+                            <i class="fas fa-industry text-white text-lg"></i>
+                        </div>
+                        <div class="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-bounce-light"></div>
+                    </div>
+                    <a href="#" class="ml-3 text-2xl font-bold text-text-primary">
+                        Pil<span class="text-primary">Andina</span>
+                    </a>
+                </div>
+
+                <!-- Menu Button (Mobile) -->
+                <div class="sm:hidden">
+                    <button id="menu-btn" class="text-text-secondary hover:text-primary">
+                        <i class="ri-menu-line text-2xl"></i>
+                    </button>
+                </div>
+
+                <!-- Nav Links -->
+                <div class="hidden sm:flex items-center space-x-6">
+                    <ul class="flex space-x-6 nav__links">
+                        <li><a href="#home" class="text-text-secondary hover:text-primary font-medium">Inicio</a></li>
+                        <li><a href="#special" class="text-text-secondary hover:text-primary font-medium">Productos</a></li>
+                        <li><a href="#chef" class="text-text-secondary hover:text-primary font-medium">Quienes Somos</a></li>
+                        <li><a href="#client" class="text-text-secondary hover:text-primary font-medium">Clientes</a></li>
+                        <li><a href="#contact" class="text-text-secondary hover:text-primary font-medium">Contáctanos</a></li>
+                    </ul>
+                    <a href="frontend/views/login.php">
+                        <button class="bg-primary hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-lg flex items-center">
+                            <i class="ri-pass-valid-fill mr-2"></i> Iniciar
+                        </button>
+                    </a>
+                </div>
+            </div>
+            <!-- Mobile Menu -->
+            <div id="nav-links" class="hidden sm:hidden bg-panel shadow-lg">
+                <ul class="flex flex-col space-y-4 p-4">
+                    <li><a href="#home" class="text-text-secondary hover:text-primary font-medium">Inicio</a></li>
+                    <li><a href="#special" class="text-text-secondary hover:text-primary font-medium">Productos</a></li>
+                    <li><a href="#chef" class="text-text-secondary hover:text-primary font-medium">Quienes Somos</a></li>
+                    <li><a href="#client" class="text-text-secondary hover:text-primary font-medium">Clientes</a></li>
+                    <li><a href="#contact" class="text-text-secondary hover:text-primary font-medium">Contáctanos</a></li>
+                    <li>
+                        <a href="frontend/views/login.php" class="block bg-primary hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-lg text-center">
+                            <i class="ri-pass-valid-fill mr-2"></i> Iniciar
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header id="home" class="min-h-screen flex items-center bg-panel">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 flex flex-col lg:flex-row items-center">
+            <div class="lg:w-1/2 text-center lg:text-left animate-slide-up">
+                <h1 class="text-4xl sm:text-5xl font-bold text-text-primary mb-6 text-shadow">
+                    Toma Leche, Vive Saludable <span class="block text-primary">Y Nunca Dejes de Crecer</span>
+                </h1>
+                <p class="text-lg text-text-secondary mb-8">
+                    Más de 30 años ofreciendo productos lácteos de calidad, frescos y nutritivos, combinando tradición e innovación para el bienestar de tu familia.
+                </p>
+                <a href="frontend/views/login.php">
+                    <button class="bg-primary hover:bg-primary-dark text-white font-medium py-3 px-6 rounded-lg shadow flex items-center mx-auto lg:mx-0">
+                        <i class="ri-pass-valid-fill mr-2"></i> Iniciar Sesión
+                    </button>
+                </a>
+            </div>
+            <div class="lg:w-1/2 mt-8 lg:mt-0 animate-fade-in">
+                <img src="frontend/landing/landing_assets/header.png" alt="header" class="w-full max-w-md mx-auto rounded-lg shadow-lg card-hover">
+            </div>
+        </div>
+    </header>
+
+    <!-- Products Section -->
+    <section id="special" class="py-16 bg-panel">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12 animate-slide-up">
+                <h2 class="text-3xl font-bold text-text-primary">Productos que Cuidan de Ti</h2>
+                <p class="text-lg text-text-secondary mt-4">
+                    Descubre nuestra variedad de lácteos frescos y nutritivos, ideales para toda la familia. En Pil Andina, te ofrecemos productos que combinan sabor, frescura y calidad en cada porción. ¡La mejor opción para tu bienestar!
+                </p>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="bg-white rounded-2xl shadow-lg p-6 card-hover animate-slide-up">
+                    <img src="frontend/landing/landing_assets/special-1.png" alt="special" class="w-full h-48 object-cover rounded-lg mb-4">
+                    <h4 class="text-xl font-semibold text-text-primary">Pilfrut Manzana 800ml</h4>
+                    <p class="text-text-secondary mt-2">
+                        Disfruta de una deliciosa experiencia con Pilfrut, nuestra bebida láctea saborizada que combina frescura y sabor en cada sorbo. Elaborada con yogurt y agua tratada, es la opción ideal para toda la familia.
+                    </p>
+                    <div class="flex justify-center mt-4">
+                        <i class="ri-star-fill text-yellow-400"></i>
+                        <i class="ri-star-fill text-yellow-400"></i>
+                        <i class="ri-star-fill text-yellow-400"></i>
+                        <i class="ri-star-fill text-yellow-400"></i>
+                        <i class="ri-star-fill text-yellow-400"></i>
+                    </div>
+                    <div class="flex justify-between items-center mt-4">
+                        <p class="text-lg font-medium text-text-primary">4.50 bs</p>
+                        <button class="bg-primary hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-lg flex items-center">
+                            <i class="ri-shopping-cart-fill mr-2"></i> Añadir a tu Carrito
+                        </button>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-lg p-6 card-hover animate-slide-up" style="animation-delay: 0.1s;">
+                    <img src="frontend/landing/landing_assets/special-2.png" alt="special" class="w-full h-48 object-cover rounded-lg mb-4">
+                    <h4 class="text-xl font-semibold text-text-primary">Dulce de Leche Sachet Trilaminado 500g</h4>
+                    <p class="text-text-secondary mt-2">
+                        Disfruta del auténtico sabor del Dulce de Leche PIL, elaborado con leche entera pasteurizada y otros ingredientes naturales. Su textura cremosa y sabor inconfundible lo hacen ideal para acompañar tus postres.
+                    </p>
+                    <div class="flex justify-center mt-4">
+                        <i class="ri-star-fill text-yellow-400"></i>
+                        <i class="ri-star-fill text-yellow-400"></i>
+                        <i class="ri-star-fill text-yellow-400"></i>
+                        <i class="ri-star-fill text-yellow-400"></i>
+                        <i class="ri-star-fill text-yellow-400"></i>
+                    </div>
+                    <div class="flex justify-between items-center mt-4">
+                        <p class="text-lg font-medium text-text-primary">18 bs</p>
+                        <button class="bg-primary hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-lg flex items-center">
+                            <i class="ri-shopping-cart-fill mr-2"></i> Añadir a tu Carrito
+                        </button>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-lg p-6 card-hover animate-slide-up" style="animation-delay: 0.2s;">
+                    <img src="frontend/landing/landing_assets/special-3.png" alt="special" class="w-full h-48 object-cover rounded-lg mb-4">
+                    <h4 class="text-xl font-semibold text-text-primary">Pura Vida Frutss Tumbo 3L</h4>
+                    <p class="text-text-secondary mt-2">
+                        Refresca tu día con Bebida de Frutas PIL, elaborada con jugos concentrados y puré de frutas, y enriquecida con vitamina C. Pasteurizada y envasada bajo estrictos controles de calidad.
+                    </p>
+                    <div class="flex justify-center mt-4">
+                        <i class="ri-star-fill text-yellow-400"></i>
+                        <i class="ri-star-fill text-yellow-400"></i>
+                        <i class="ri-star-fill text-yellow-400"></i>
+                        <i class="ri-star-fill text-yellow-400"></i>
+                        <i class="ri-star-fill text-yellow-400"></i>
+                    </div>
+                    <div class="flex justify-between items-center mt-4">
+                        <p class="text-lg font-medium text-text-primary">15 bs</p>
+                        <button class="bg-primary hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-lg flex items-center">
+                            <i class="ri-shopping-cart-fill mr-2"></i> Añadir a tu Carrito
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Explore Section -->
+    <section class="py-16 bg-panel">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row items-center">
+            <div class="lg:w-1/2 order-2 lg:order-1 mt-8 lg:mt-0 animate-fade-in">
+                <img src="frontend/landing/landing_assets/explore.png" alt="explore" class="w-full max-w-md mx-auto rounded-lg shadow-lg card-hover">
+            </div>
+            <div class="lg:w-1/2 order-1 lg:order-2 text-center lg:text-left animate-slide-up">
+                <h1 class="text-3xl sm:text-4xl font-bold text-text-primary mb-6">El Sabor de la Calidad</h1>
+                <p class="text-lg text-text-secondary mb-8">
+                    En Pil Andina, cada producto refleja nuestro compromiso con la frescura y la calidad. Desde nuestra bebida láctea saborizada hasta el delicioso dulce de leche, nos esforzamos por brindarte opciones deliciosas, nutritivas y llenas de sabor.
+                </p>
+                <button class="bg-primary hover:bg-primary-dark text-white font-medium py-3 px-6 rounded-lg shadow flex items-center mx-auto lg:mx-0">
+                    Explora más de Pil <i class="ri-arrow-right-line ml-2"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Banner Section -->
+    <section class="py-16 bg-panel">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white rounded-2xl shadow-lg p-6 card-hover animate-slide-up">
+                    <div class="flex justify-center mb-4">
+                        <div class="w-12 h-12 bg-gradient-primary rounded-full flex items-center justify-center shadow-lg">
+                            <i class="ri-shopping-cart-fill text-white text-xl"></i>
+                        </div>
+                    </div>
+                    <h4 class="text-xl font-semibold text-text-primary text-center">Compra en Línea</h4>
+                    <p class="text-text-secondary mt-2 text-center">
+                        Escoge entre nuestras opciones frescas y deliciosas. Con Pil Andina, siempre tienes lo mejor a tu alcance para disfrutar de una comida rápida y sabrosa.
+                    </p>
+                    <a href="#" class="block mt-4 text-primary hover:text-primary-dark font-medium text-center">
+                        Comprar <i class="ri-arrow-right-line ml-1"></i>
+                    </a>
+                </div>
+                <div class="bg-white rounded-2xl shadow-lg p-6 card-hover animate-slide-up" style="animation-delay: 0.1s;">
+                    <div class="flex justify-center mb-4">
+                        <div class="w-12 h-12 bg-gradient-primary rounded-full flex items-center justify-center shadow-lg">
+                            <i class="ri-truck-fill text-white text-xl"></i>
+                        </div>
+                    </div>
+                    <h4 class="text-xl font-semibold text-text-primary text-center">Solicita un Pedido</h4>
+                    <p class="text-text-secondary mt-2 text-center">
+                        Disfruta de nuestras bebidas y productos lácteos de calidad. Haz tu pedido para ti, para tu empresa o para tu tienda mayorista o minorista.
+                    </p>
+                    <a href="#" class="block mt-4 text-primary hover:text-primary-dark font-medium text-center">
+                        Ordena ahora <i class="ri-arrow-right-line ml-1"></i>
+                    </a>
+                </div>
+                <div class="bg-white rounded-2xl shadow-lg p-6 card-hover animate-slide-up" style="animation-delay: 0.2s;">
+                    <div class="flex justify-center mb-4">
+                        <div class="w-12 h-12 bg-gradient-primary rounded-full flex items-center justify-center shadow-lg">
+                            <i class="ri-star-smile-fill text-white text-xl"></i>
+                        </div>
+                    </div>
+                    <h4 class="text-xl font-semibold text-text-primary text-center">Califica tu Comida</h4>
+                    <p class="text-text-secondary mt-2 text-center">
+                        Tu opinión es importante. Queremos saber cómo te ha gustado nuestra comida. Califica nuestros productos y ayúdanos a seguir ofreciendo lo mejor.
+                    </p>
+                    <a href="#" class="block mt-4 text-primary hover:text-primary-dark font-medium text-center">
+                        Calificar <i class="ri-arrow-right-line ml-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Us Section -->
+    <section id="chef" class="py-16 bg-panel relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row items-center">
+            <div class="lg:w-1/2 mt-8 lg:mt-0 animate-fade-in">
+                <img src="frontend/landing/landing_assets/chef.png" alt="chef" class="w-full max-w-md mx-auto rounded-lg shadow-lg card-hover">
+            </div>
+            <div class="lg:w-1/2 text-center lg:text-left animate-slide-up">
+                <h2 class="text-3xl sm:text-4xl font-bold text-text-primary mb-6">La Fuerza de la Mano de Obra Boliviana</h2>
+                <p class="text-lg text-text-secondary mb-8">
+                    En Pil Andina, creemos en el talento y la dedicación de la mano de obra boliviana. Nuestro compromiso con el desarrollo de la industria nacional es fundamental, y por ello, trabajamos de la mano con los profesionales que día a día contribuyen al crecimiento de nuestra empresa.
+                </p>
+                <ul class="space-y-4">
+                    <li class="flex items-center text-text-secondary">
+                        <i class="ri-checkbox-fill text-primary mr-2"></i> Apoyamos la mano de obra boliviana en cada proceso.
+                    </li>
+                    <li class="flex items-center text-text-secondary">
+                        <i class="ri-checkbox-fill text-primary mr-2"></i> Nuestros productos reflejan dedicación.
+                    </li>
+                    <li class="flex items-center text-text-secondary">
+                        <i class="ri-checkbox-fill text-primary mr-2"></i> Ofrecemos productos frescos y de calidad.
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section id="client" class="py-16 bg-panel">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12 animate-slide-up">
+                <h2 class="text-3xl font-bold text-text-primary">Lo que Dicen Nuestros Clientes</h2>
+                <p class="text-lg text-text-secondary mt-4">
+                    Descubre por qué nuestros consumidores confían en Pil Andina. Cada opinión refleja el compromiso con la calidad y el sabor auténtico de nuestros productos.
+                </p>
+            </div>
+            <div class="swiper client__swiper">
+                <div class="swiper-wrapper">
+                    <div class="swiper-slide">
+                        <div class="bg-white rounded-2xl shadow-lg p-6 card-hover max-w-sm mx-auto">
+                            <p class="text-text-secondary mb-4">
+                                Tomar la bebida de frutas me hace sentir bien. Fresca, natural y sé que apoyo a los productores bolivianos. ¡Un gusto en cada sorbo!
+                            </p>
+                            <img src="frontend/landing/landing_assets/client-1.jpg" alt="client" class="w-16 h-16 rounded-full mx-auto mb-4">
+                            <h4 class="text-lg font-semibold text-text-primary">David Lee</h4>
+                            <h5 class="text-text-secondary">Cliente</h5>
+                        </div>
+                    </div>
+                    <div class="swiper-slide">
+                        <div class="bg-white rounded-2xl shadow-lg p-6 card-hover max-w-sm mx-auto">
+                            <p class="text-text-secondary mb-4">
+                                ¡Me encanta el sabor de los productos Pil Andina! Se nota que están hechos con mucho cariño. Mis hijos siempre me piden más.
+                            </p>
+                            <img src="frontend/landing/landing_assets/client-2.jpg" alt="client" class="w-16 h-16 rounded-full mx-auto mb-4">
+                            <h4 class="text-lg font-semibold text-text-primary">Emily Johnson</h4>
+                            <h5 class="text-text-secondary">Cliente</h5>
+                        </div>
+                    </div>
+                    <div class="swiper-slide">
+                        <div class="bg-white rounded-2xl shadow-lg p-6 card-hover max-w-sm mx-auto">
+                            <p class="text-text-secondary mb-4">
+                                Probé el Dulce de Leche PIL en mi café y ahora no puedo vivir sin él. ¡Es simplemente delicioso!
+                            </p>
+                            <img src="frontend/landing/landing_assets/client-3.jpg" alt="client" class="w-16 h-16 rounded-full mx-auto mb-4">
+                            <h4 class="text-lg font-semibold text-text-primary">Michael Thompson</h4>
+                            <h5 class="text-text-secondary">Cliente</h5>
+                        </div>
+                    </div>
+                </div>
+                <div class="swiper-pagination mt-6"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="contact" class="bg-panel py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div class="footer__col">
+                <div class="flex items-center mb-4">
+                    <div class="relative">
+                        <div class="w-10 h-10 bg-gradient-primary rounded-full flex items-center justify-center shadow-lg animate-pulse-glow">
+                            <i class="fas fa-industry text-white text-lg"></i>
+                        </div>
+                        <div class="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-bounce-light"></div>
+                    </div>
+                    <a href="#" class="ml-3 text-xl font-bold text-text-primary">
+                        Pil<span class="text-primary">Andina</span>
+                    </a>
+                </div>
+                <p class="text-text-secondary">
+                    Descubre nuestra variedad de lácteos frescos y nutritivos, ideales para toda la familia. En Pil Andina, te ofrecemos productos que combinan sabor, frescura y calidad.
+                </p>
+            </div>
+            <div class="footer__col">
+                <h4 class="text-lg font-semibold text-text-primary mb-4">Producto</h4>
+                <ul class="space-y-2">
+                    <li><a href="#" class="text-text-secondary hover:text-primary">Menú</a></li>
+                    <li><a href="#" class="text-text-secondary hover:text-primary">Nuevas Entradas</a></li>
+                    <li><a href="#" class="text-text-secondary hover:text-primary">Contáctanos</a></li>
+                </ul>
+            </div>
+            <div class="footer__col">
+                <h4 class="text-lg font-semibold text-text-primary mb-4">Contáctanos</h4>
+                <ul class="space-y-2">
+                    <li><a href="#" class="text-text-secondary hover:text-primary">Hablemos</a></li>
+                    <li><a href="#" class="text-text-secondary hover:text-primary">WhatsApp</a></li>
+                    <li><a href="#" class="text-text-secondary hover:text-primary">Facebook</a></li>
+                    <li><a href="#" class="text-text-secondary hover:text-primary">Telegram</a></li>
+                </ul>
+            </div>
+            <div class="footer__col">
+                <h4 class="text-lg font-semibold text-text-primary mb-4">Compañía</h4>
+                <ul class="space-y-2">
+                    <li><a href="#" class="text-text-secondary hover:text-primary">Nuestra Historia</a></li>
+                    <li><a href="#" class="text-text-secondary hover:text-primary">Términos de Servicio</a></li>
+                    <li><a href="#" class="text-text-secondary hover:text-primary">Política de Privacidad</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="mt-8 text-center text-text-secondary">
+            © Copyright 2025. Todos los derechos reservados.
+        </div>
+    </footer>
+
+    <script src="https://unpkg.com/scrollreveal"></script>
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script>
+        // Mobile Menu Toggle
+        const menuBtn = document.getElementById('menu-btn');
+        const navLinks = document.getElementById('nav-links');
+
+        menuBtn.addEventListener('click', () => {
+            navLinks.classList.toggle('hidden');
+        });
+
+        // Swiper Initialization
+        const swiper = new Swiper('.swiper', {
+            slidesPerView: 1,
+            spaceBetween: 20,
+            pagination: {
+                el: '.swiper-pagination',
+                clickable: true,
+            },
+            breakpoints: {
+                640: {
+                    slidesPerView: 2,
+                },
+                1024: {
+                    slidesPerView: 3,
+                },
+            },
+        });
+
+        // ScrollReveal Animations
+        ScrollReveal().reveal('.animate-slide-up', {
+            duration: 1000,
+            distance: '30px',
+            origin: 'bottom',
+            easing: 'ease-out',
+            interval: 100,
+        });
+
+        ScrollReveal().reveal('.animate-fade-in', {
+            duration: 1000,
+            opacity: 0,
+            easing: 'ease-in',
+            interval: 100,
+        });
+    </script>
+</body>
+</html>
