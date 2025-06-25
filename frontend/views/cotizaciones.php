@@ -38,105 +38,148 @@ function obtenerProductos($conexion) {
 $productos = obtenerProductos($conn);
 
 // Limpiar cotización anterior si se solicita nueva
-if (isset($_GET['nueva'])) {
-    unset($_SESSION['cotizacion']);
-    header("Location: cotizaciones.php");
-    exit;
-}
-
-// Procesar cotización
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $items = $_POST['items'] ?? [];
-    $detalle = array();
-    $total = 0;
-    
-    foreach ($items as $id => $cantidad) {
-        if ($cantidad > 0) {
-            foreach ($productos as $producto) {
-                if ($producto['id_producto'] == $id) {
-                    $subtotal = $producto['precio'] * $cantidad;
-                    $total += $subtotal;
-                    
-                    $detalle[] = array(
-                        'id' => $id,
-                        'nombre' => $producto['nombre_producto'],
-                        'precio' => $producto['precio'],
-                        'cantidad' => $cantidad,
-                        'subtotal' => $subtotal
-                    );
-                    break;
-                }
-            }
-        }
-    }
-    
-    // Guardar cotización en sesión
-    $_SESSION['cotizacion'] = array(
-        'detalle' => $detalle,
-        'total' => $total,
-        'fecha' => date('d/m/Y H:i:s')
-    );
-    
-    // Redirigir para evitar reenvío del formulario
-    header("Location: cotizaciones.php");
-    exit;
-}
-
-// Generar PDF si se solicita
 if (isset($_GET['imprimir']) && isset($_SESSION['cotizacion'])) {
     require('fpdf/fpdf.php');
     
     $cotizacion = $_SESSION['cotizacion'];
     
-    // Crear PDF
-    $pdf = new FPDF();
+    class CotizacionPDF extends FPDF {
+        private $primaryColor = array(26, 82, 118);
+        private $accentColor = array(236, 112, 99);
+        private $lightBg = array(245, 245, 245);
+        
+        function Header() {
+            $this->SetFillColor($this->primaryColor[0], $this->primaryColor[1], $this->primaryColor[2]);
+            $this->Rect(0, 0, 210, 40, 'F');
+            
+            $this->SetDrawColor(255, 255, 255);
+            $this->SetLineWidth(2);
+            $this->Rect(15, 10, 40, 25, 'D');
+            
+            $this->Image('../views/logo/sinf.png', 17, 12, 36);
+            
+            $this->SetFont('Arial', 'B', 20);
+            $this->SetTextColor(255, 255, 255);
+            $this->SetXY(60, 12);
+            $this->Cell(0, 10, 'PIL ANDINA', 0, 1, 'L');
+            
+            $this->SetFont('Arial', '', 10);
+            $this->SetXY(60, 22);
+            $this->Cell(0, 6, 'Soluciones Empresariales', 0, 1, 'L');
+            
+            $this->SetFont('Arial', '', 8);
+            $this->SetXY(60, 30);
+            $this->Cell(0, 5, 'Tel: +591 2-XXXXXXX | Email: info@pilandina.com', 0, 1, 'L');
+            
+            $this->SetFillColor($this->accentColor[0], $this->accentColor[1], $this->accentColor[2]);
+            $this->SetDrawColor(255, 255, 255);
+            $this->SetLineWidth(1);
+            $this->RoundedRect(140, 10, 55, 15, 3, 'FD');
+            
+            $this->SetFont('Arial', 'B', 12);
+            $this->SetTextColor(255, 255, 255);
+            $this->SetXY(140, 13);
+            $this->Cell(55, 8, 'COTIZACION', 0, 1, 'C');
+            
+            $this->Ln(15);
+        }
+        
+        function Footer() {
+            $this->SetY(-30);
+            $this->SetDrawColor($this->accentColor[0], $this->accentColor[1], $this->accentColor[2]);
+            $this->SetLineWidth(1);
+            $this->Line(15, $this->GetY(), 195, $this->GetY());
+            
+            $this->SetFont('Arial', 'I', 8);
+            $this->SetTextColor(100, 100, 100);
+            $this->SetXY(15, -25);
+            $this->Cell(0, 5, 'Validez: 30 dias | Contacto: +591 2-XXXXXXX | info@pilandina.com', 0, 1, 'C');
+            
+            $this->SetFont('Arial', 'I', 8);
+            $this->Cell(0, 5, iconv('UTF-8', 'windows-1252', 'Gracias por su preferencia'), 0, 1, 'C');
+        }
+        
+        function RoundedRect($x, $y, $w, $h, $r, $style = '') {
+            $k = $this->k;
+            $hp = $this->h;
+            if($style=='F')
+                $op='f';
+            elseif($style=='FD' || $style=='DF')
+                $op='B';
+            else
+                $op='S';
+            $MyArc = 4/3 * (sqrt(2) - 1);
+            $this->_out(sprintf('%.2F %.2F m',($x+$r)*$k,($hp-$y)*$k ));
+            $xc = $x+$w-$r ;
+            $yc = $y+$r;
+            $this->_out(sprintf('%.2F %.2F l', $xc*$k,($hp-$y)*$k ));
+            $this->_Arc($xc + $r*$MyArc, $yc - $r, $xc + $r, $yc - $r*$MyArc, $xc + $r, $yc);
+            $xc = $x+$w-$r ;
+            $yc = $y+$h-$r;
+            $this->_out(sprintf('%.2F %.2F l',($x+$w)*$k,($hp-$yc)*$k));
+            $this->_Arc($xc + $r, $yc + $r*$MyArc, $xc + $r*$MyArc, $yc + $r, $xc, $yc + $r);
+            $xc = $x+$r ;
+            $yc = $y+$h-$r;
+            $this->_out(sprintf('%.2F %.2F l',$xc*$k,($hp-($y+$h))*$k));
+            $this->_Arc($xc - $r*$MyArc, $yc + $r, $xc - $r, $yc + $r*$MyArc, $xc - $r, $yc);
+            $xc = $x+$r ;
+            $yc = $y+$r;
+            $this->SetXY(5, $this->GetY());
+            $this->_out(sprintf('%.2F %.2F l',($x)*$k,($hp-$yc)*$k ));
+            $this->_Arc($xc - $r, $yc - $r*$MyArc, $xc - $r*$MyArc, $yc - $r, $xc, $yc - $r);
+            $this->_out($op);
+        }
+        
+        function _Arc($x1, $y1, $x2, $y2, $x3, $y3) {
+            $h = $this->h;
+            $this->_out(sprintf('%.2F %.2F %.2F %.2F %.2F %.2F c ', $x1*$this->k, ($h-$y1)*$this->k,
+                $x2*$this->k, ($h-$y2)*$this->k, $x3*$this->k, ($h-$y3)*$this->k));
+        }
+    }
+    
+    $pdf = new CotizacionPDF();
     $pdf->AddPage();
-    $pdf->SetFont('Arial', 'B', 16);
+    $pdf->Ln(20);
     
-    // Encabezado
-    $pdf->SetTextColor(78, 107, 175);
-    $pdf->Cell(0, 10, 'COTIZACION', 0, 1, 'C');
-    $pdf->SetFont('Arial', '', 10);
-    $pdf->Cell(0, 10, 'Fecha: ' . $cotizacion['fecha'], 0, 1, 'R');
-    $pdf->Ln(10);
+    $pdf->SetFont('Arial', 'B', 12);
+    $pdf->SetTextColor(26, 82, 118);
+    $pdf->Cell(0, 8, 'DETALLES DE LA COTIZACION', 0, 1, 'L');
+    $pdf->Cell(0, 8, 'Fecha: ' . $cotizacion['fecha'], 0, 1, 'R');
     
-    // Configurar anchos de columna
+    $pdf->Ln(5);
+    
     $w = array(80, 30, 30, 40);
     
-    // Encabezados de tabla
-    $pdf->SetFont('Arial', 'B', 12);
-    $pdf->SetFillColor(78, 107, 175);
+    $pdf->SetFont('Arial', 'B', 11);
+    $pdf->SetFillColor(26, 82, 118);
     $pdf->SetTextColor(255);
+    $pdf->SetDrawColor(200, 200, 200);
+    $pdf->SetLineWidth(0.5);
+    
     $pdf->Cell($w[0], 10, 'Producto', 1, 0, 'C', true);
     $pdf->Cell($w[1], 10, 'Precio Unit.', 1, 0, 'C', true);
     $pdf->Cell($w[2], 10, 'Cantidad', 1, 0, 'C', true);
     $pdf->Cell($w[3], 10, 'Subtotal', 1, 1, 'C', true);
     
-    // Contenido de la tabla
     $pdf->SetFont('Arial', '', 10);
     $pdf->SetTextColor(0);
-    $pdf->SetFillColor(224, 235, 255);
+    $pdf->SetFillColor(245, 245, 245);
     $fill = false;
     
     foreach($cotizacion['detalle'] as $item) {
-        $pdf->Cell($w[0], 10, iconv('UTF-8', 'windows-1252', $item['nombre']), 1, 0, 'L', $fill);
+        $pdf->Cell($w[0], 10, iconv('UTF-8', 'windows-1252', substr($item['nombre'], 0, 40)), 1, 0, 'L', $fill);
         $pdf->Cell($w[1], 10, 'Bs ' . number_format($item['precio'], 2), 1, 0, 'R', $fill);
         $pdf->Cell($w[2], 10, $item['cantidad'], 1, 0, 'C', $fill);
         $pdf->Cell($w[3], 10, 'Bs ' . number_format($item['subtotal'], 2), 1, 1, 'R', $fill);
         $fill = !$fill;
     }
     
-    // Total
     $pdf->SetFont('Arial', 'B', 12);
-    $pdf->Cell($w[0]+$w[1]+$w[2], 10, 'TOTAL', 1, 0, 'R', true);
-    $pdf->Cell($w[3], 10, 'Bs ' . number_format($cotizacion['total'], 2), 1, 1, 'R', true);
+    $pdf->SetFillColor(236, 112, 99);
+    $pdf->SetTextColor(255);
+    $pdf->Cell($w[0]+$w[1]+$w[2], 12, 'TOTAL', 1, 0, 'R', true);
+    $pdf->Cell($w[3], 12, 'Bs ' . number_format($cotizacion['total'], 2), 1, 1, 'R', true);
     
-    // Pie de página
-    $pdf->Ln(15);
-    $pdf->SetFont('Arial', 'I', 10);
-    $pdf->Cell(0, 10, iconv('UTF-8', 'windows-1252', 'Gracias por su preferencia'), 0, 1, 'C');
-    
-    // Salida del PDF
     $pdf->Output('I', 'cotizacion_'.date('YmdHis').'.pdf');
     exit;
 }

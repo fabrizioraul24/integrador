@@ -142,24 +142,149 @@ function obtener_siguiente_numero($archivo) {
 // Generar reporte en PDF
 if (isset($_GET['reporte'])) {
     require('fpdf/fpdf.php');
-
+    
     class PDF extends FPDF {
+        private $headerColor = array(41, 84, 144); // Azul corporativo #295490
+        private $accentColor = array(230, 126, 34); // Naranja elegante #E67E22
+        private $lightBlue = array(236, 245, 255); // Azul muy claro #ECF5FF
+        private $darkGray = array(52, 73, 94); // Gris oscuro #34495E
+        
         function Header() {
-            $this->Image('../views/logo/sinf.png', 10, 8, 30);
-            $this->SetFont('Arial', 'B', 16);
-            $this->SetTextColor(78, 107, 175);
-            $this->Cell(0, 10, 'REPORTE DE CLIENTES - PIL ANDINA', 0, 1, 'C');
+            // Fondo degradado para el header
+            $this->SetFillColor($this->headerColor[0], $this->headerColor[1], $this->headerColor[2]);
+            $this->Rect(0, 0, 210, 45, 'F');
+            
+            // Logo con mejor posicionamiento
+            $this->Image('../views/logo/sinf.png', 15, 8, 35);
+            
+            // Título principal con mejor tipografía
+            $this->SetFont('Arial', 'B', 22);
+            $this->SetTextColor(255, 255, 255);
+            $this->SetXY(60, 12);
+            $this->Cell(0, 8, 'PIL ANDINA', 0, 1, 'L');
+            
+            // Subtítulo
+            $this->SetFont('Arial', '', 14);
+            $this->SetXY(60, 22);
+            $this->Cell(0, 6, 'REPORTE DE CLIENTES DEL SISTEMA', 0, 1, 'L');
+            
+            // Línea decorativa
+            $this->SetDrawColor($this->accentColor[0], $this->accentColor[1], $this->accentColor[2]);
+            $this->SetLineWidth(2);
+            $this->Line(60, 32, 190, 32);
+            
+            // Fecha en esquina superior derecha
+            $this->SetFont('Arial', '', 9);
+            $this->SetXY(140, 35);
+            $this->Cell(0, 4, 'Fecha: ' . date("d/m/Y H:i"), 0, 0, 'R');
+            
+            $this->Ln(15);
+        }
+        
+        function Footer() {
+            $this->SetY(-25);
+            
+            // Línea decorativa en footer
+            $this->SetDrawColor($this->headerColor[0], $this->headerColor[1], $this->headerColor[2]);
+            $this->SetLineWidth(0.5);
+            $this->Line(15, $this->GetY(), 195, $this->GetY());
+            
+            $this->Ln(3);
+            
+            // Información del documento en dos columnas
+            $this->SetFont('Arial', '', 8);
+            $this->SetTextColor($this->darkGray[0], $this->darkGray[1], $this->darkGray[2]);
+            
+            // Columna izquierda
+            $this->SetX(15);
+            $this->Cell(90, 4, 'Código: ' . $GLOBALS['codigo_reporte'], 0, 0, 'L');
+            
+            // Columna derecha
+            $this->Cell(0, 4, 'Página ' . $this->PageNo() . ' de {nb}', 0, 0, 'R');
+            
+            $this->Ln(4);
+            $this->SetX(15);
+            $this->Cell(0, 4, '© PIL ANDINA - Sistema de Información Gerencial', 0, 0, 'C');
+        }
+        
+        function CreateInfoBox($title, $content, $x, $y, $width, $height) {
+            // Caja con sombra
+            $this->SetFillColor(200, 200, 200);
+            $this->Rect($x + 1, $y + 1, $width, $height, 'F');
+            
+            // Caja principal
+            $this->SetFillColor($this->lightBlue[0], $this->lightBlue[1], $this->lightBlue[2]);
+            $this->SetDrawColor($this->headerColor[0], $this->headerColor[1], $this->headerColor[2]);
+            $this->SetLineWidth(0.5);
+            $this->Rect($x, $y, $width, $height, 'DF');
+            
+            // Título
+            $this->SetXY($x + 5, $y + 3);
+            $this->SetFont('Arial', 'B', 10);
+            $this->SetTextColor($this->headerColor[0], $this->headerColor[1], $this->headerColor[2]);
+            $this->Cell(0, 5, $title, 0, 1, 'L');
+            
+            // Contenido
+            $this->SetX($x + 5);
+            $this->SetFont('Arial', '', 9);
+            $this->SetTextColor($this->darkGray[0], $this->darkGray[1], $this->darkGray[2]);
+            $this->Cell(0, 5, $content, 0, 1, 'L');
+        }
+        
+        function CreateSectionTitle($title) {
             $this->Ln(5);
+            
+            // Fondo para el título de sección
+            $this->SetFillColor($this->accentColor[0], $this->accentColor[1], $this->accentColor[2]);
+            $this->Rect(15, $this->GetY(), 180, 8, 'F');
+            
+            $this->SetFont('Arial', 'B', 12);
+            $this->SetTextColor(255, 255, 255);
+            $this->SetX(15);
+            $this->Cell(180, 8, $title, 0, 1, 'C');
+            
+            $this->Ln(3);
+        }
+        
+        // Método RoundRect para compatibilidad con el diseño
+        function RoundRect($x, $y, $w, $h, $r, $style = '') {
+            $k = $this->k;
+            $hp = $this->h;
+            if ($style == 'F')
+                $op = 'f';
+            elseif ($style == 'FD' || $style == 'DF')
+                $op = 'B';
+            else
+                $op = 'S';
+            $MyArc = 4/3 * (sqrt(2) - 1); // Definir $MyArc
+            $this->_out(sprintf('%.2F %.2F m', ($x+$r)*$k, ($hp-$y)*$k));
+            $xc = $x+$w-$r;
+            $yc = $y+$r;
+            $this->_out(sprintf('%.2F %.2F l', $xc*$k, ($hp-$y)*$k));
+            $this->_Arc($xc + $r*$MyArc, $yc - $r, $xc + $r, $yc - $r*$MyArc, $xc + $r, $yc);
+            $xc = $x+$w-$r;
+            $yc = $y+$h-$r;
+            $this->_out(sprintf('%.2F %.2F l', ($x+$w)*$k, ($hp-$yc)*$k));
+            $this->_Arc($xc + $r, $yc + $r*$MyArc, $xc + $r*$MyArc, $yc + $r, $xc, $yc + $r);
+            $xc = $x+$r;
+            $yc = $y+$h-$r;
+            $this->_out(sprintf('%.2F %.2F l', $xc*$k, ($hp-($y+$h))*$k));
+            $this->_Arc($xc - $r*$MyArc, $yc + $r, $xc - $r, $yc + $r*$MyArc, $xc - $r, $yc);
+            $xc = $x+$r;
+            $yc = $y+$r;
+            $this->_out(sprintf('%.2F %.2F l', ($x)*$k, ($hp-$yc)*$k));
+            $this->_Arc($xc - $r, $yc - $r*$MyArc, $xc - $r*$MyArc, $yc - $r, $xc, $yc - $r);
+            $this->_out($op);
         }
 
-        function Footer() {
-            $this->SetY(-30);
-            $this->SetFont('Arial', 'I', 8);
-            $this->Cell(0, 5, 'Codigo del documento: ' . $GLOBALS['codigo_reporte'], 0, 1, 'L');
-            $this->Cell(0, 5, 'Pagina ' . $this->PageNo() . ' de {nb}', 0, 0, 'C');
+        function _Arc($x1, $y1, $x2, $y2, $x3, $y3) {
+            $h = $this->h;
+            $this->_out(sprintf('%.2F %.2F %.2F %.2F %.2F %.2F c ', $x1*$this->k, ($h-$y1)*$this->k,
+                $x2*$this->k, ($h-$y2)*$this->k, $x3*$this->k, ($h-$y3)*$this->k));
         }
     }
-
+    
+    // Consulta SQL para clientes
     $sql = "SELECT * FROM clientes WHERE deleted = 0";
     if (!empty($search)) {
         $sql = "SELECT * FROM clientes WHERE nombres_y_apellidos LIKE ? AND deleted = 0";
@@ -171,71 +296,124 @@ if (isset($_GET['reporte'])) {
     } else {
         $result = $conn->query($sql);
     }
-
+    
+    // Generar código del reporte
     $numero_reporte = obtener_siguiente_numero($archivo_numeracion);
     $fecha_actual = date("d-m-Y");
     $hora_actual = date("H:i");
     $codigo_reporte = "$numero_reporte-$fecha_actual-$hora_actual-$numero_reporte";
-
+    
+    // Crear PDF
     $pdf = new PDF('P', 'mm', 'A4');
     $pdf->AddPage();
     $pdf->AliasNbPages();
-
-    $pdf->SetFont('Arial', 'B', 12);
-    $pdf->SetTextColor(255, 0, 0);
-    $pdf->Cell(0, 10, 'Codigo del Reporte: ' . $codigo_reporte, 0, 1, 'C');
-    $pdf->SetTextColor(0, 0, 0);
-
-    $pdf->SetFont('Arial', '', 10);
-    $pdf->Cell(40, 7, 'Fecha de generacion:', 0, 0);
-    $pdf->Cell(0, 7, date("d/m/Y H:i:s"), 0, 1);
-
+    
+    // Código del reporte destacado
+    $pdf->SetFont('Arial', 'B', 14);
+    $pdf->SetTextColor(230, 126, 34); // Color naranja
+    $pdf->SetFillColor(255, 248, 220); // Fondo amarillo muy claro
+    $pdf->Rect(15, $pdf->GetY(), 180, 12, 'F');
+    $pdf->Cell(180, 12, 'CÓDIGO DEL REPORTE: ' . $codigo_reporte, 0, 1, 'C');
+    
+    $pdf->Ln(8);
+    
+    // Información del reporte en cajas elegantes
     $usuario_generado = isset($_SESSION['nombre_usu']) ? $_SESSION['nombre_usu'] : 'Desconocido';
-    $pdf->Cell(40, 7, 'Generado por:', 0, 0);
-    $pdf->Cell(0, 7, $usuario_generado, 0, 1);
-
-    $pdf->Ln(10);
-
-    $pdf->SetFont('Arial', 'B', 11);
-    $pdf->SetFillColor(78, 107, 175);
+    
+    $pdf->CreateInfoBox('FECHA DE GENERACIÓN', date("d/m/Y H:i:s"), 15, $pdf->GetY(), 85, 15);
+    $pdf->CreateInfoBox('GENERADO POR', $usuario_generado, 110, $pdf->GetY() - 15, 85, 15);
+    
+    $pdf->Ln(20);
+    
+    // Título de la sección de datos
+    $pdf->CreateSectionTitle('LISTADO DE CLIENTES REGISTRADOS');
+    
+    // Encabezados de tabla con diseño mejorado
+    $pdf->SetFont('Arial', 'B', 10);
+    
+    // Gradiente para encabezado
+    $pdf->SetFillColor(41, 84, 144);
     $pdf->SetTextColor(255, 255, 255);
-    $pdf->Cell(15, 10, '#', 1, 0, 'C', true);
-    $pdf->Cell(55, 10, 'NOMBRE COMPLETO', 1, 0, 'C', true);
-    $pdf->Cell(70, 10, 'DIRECCION', 1, 0, 'C', true);
-    $pdf->Cell(25, 10, 'TELEFONO', 1, 0, 'C', true);
-    $pdf->Cell(25, 10, 'NIT', 1, 1, 'C', true);
-
-    $pdf->SetFont('Arial', '', 10);
-    $pdf->SetTextColor(0, 0, 0);
-    $pdf->SetFillColor(240, 245, 255);
-
+    $pdf->SetDrawColor(255, 255, 255);
+    $pdf->SetLineWidth(0.3);
+    
+    $pdf->Cell(20, 12, '#', 1, 0, 'C', true);
+    $pdf->Cell(50, 12, 'NOMBRE COMPLETO', 1, 0, 'C', true);
+    $pdf->Cell(55, 12, 'DIRECCIÓN', 1, 0, 'C', true);
+    $pdf->Cell(30, 12, 'TELÉFONO', 1, 0, 'C', true);
+    $pdf->Cell(25, 12, 'NIT', 1, 1, 'C', true);
+    
+    // Datos de la tabla con alternancia de colores mejorada
+    $pdf->SetFont('Arial', '', 9);
+    $pdf->SetTextColor(52, 73, 94);
+    $pdf->SetDrawColor(189, 195, 199);
+    
     $row_num = 0;
     while ($row = $result->fetch_assoc()) {
-        $fill = ($row_num % 2) ? true : false;
-        $pdf->Cell(15, 8, ++$row_num, 1, 0, 'C', $fill);
-        $pdf->Cell(55, 8, $row['nombres_y_apellidos'], 1, 0, 'L', $fill);
-        $pdf->Cell(70, 8, $row['direccion'], 1, 0, 'L', $fill);
-        $pdf->Cell(25, 8, $row['telefono'], 1, 0, 'C', $fill);
-        $pdf->Cell(25, 8, $row['NIT'], 1, 1, 'C', $fill);
+        $row_num++;
+        
+        // Colores alternados más elegantes
+        if ($row_num % 2) {
+            $pdf->SetFillColor(250, 252, 255); // Azul muy claro
+        } else {
+            $pdf->SetFillColor(255, 255, 255); // Blanco
+        }
+        
+        // Resaltar cada 5 filas con un color especial
+        if ($row_num % 5 == 0) {
+            $pdf->SetFillColor(255, 248, 220); // Amarillo muy claro
+        }
+        
+        $pdf->Cell(20, 10, $row_num, 1, 0, 'C', true);
+        $pdf->Cell(50, 10, substr($row['nombres_y_apellidos'], 0, 22), 1, 0, 'L', true);
+        $pdf->Cell(55, 10, substr($row['direccion'], 0, 25), 1, 0, 'L', true);
+        $pdf->Cell(30, 10, $row['telefono'], 1, 0, 'C', true);
+        $pdf->Cell(25, 10, $row['NIT'], 1, 1, 'C', true);
+        
+        // Añadir página si es necesario
+        if ($pdf->GetY() > 250) {
+            $pdf->AddPage();
+            
+            // Repetir encabezados en nueva página
+            $pdf->SetFont('Arial', 'B', 10);
+            $pdf->SetFillColor(41, 84, 144);
+            $pdf->SetTextColor(255, 255, 255);
+            $pdf->SetDrawColor(255, 255, 255);
+            $pdf->SetLineWidth(0.3);
+            
+            $pdf->Cell(20, 12, '#', 1, 0, 'C', true);
+            $pdf->Cell(50, 12, 'NOMBRE COMPLETO', 1, 0, 'C', true);
+            $pdf->Cell(55, 12, 'DIRECCIÓN', 1, 0, 'C', true);
+            $pdf->Cell(30, 12, 'TELÉFONO', 1, 0, 'C', true);
+            $pdf->Cell(25, 12, 'NIT', 1, 1, 'C', true);
+            
+            $pdf->SetFont('Arial', '', 9);
+            $pdf->SetTextColor(52, 73, 94);
+            $pdf->SetDrawColor(189, 195, 199);
+        }
     }
-
-    $pdf->Output('I', 'Reporte_Clientes_' . $codigo_reporte . '.pdf');
+    
+    // Resumen final
+    $pdf->Ln(10);
+    $total_clientes = $row_num;
+    
+    $pdf->SetFont('Arial', 'B', 11);
+    $pdf->SetTextColor(41, 84, 144);
+    $pdf->SetFillColor(236, 245, 255);
+    $pdf->Rect(15, $pdf->GetY(), 180, 10, 'F');
+    $pdf->Cell(180, 10, 'TOTAL DE CLIENTES REGISTRADOS: ' . $total_clientes, 0, 1, 'C');
+    
+    // Limpiar el búfer antes de enviar el PDF
+    ob_end_clean();
+    
+    // Generar y mostrar PDF
+    $pdf->Output('I', 'Reporte_Clientes_PIL_Andina_' . $codigo_reporte . '.pdf');
+    
     if (isset($stmt)) {
         $stmt->close();
     }
     exit();
 }
-
-// Obtener datos para la vista HTML
-$sql = "SELECT * FROM clientes WHERE deleted = 0";
-if (!empty($search)) {
-    $sql = "SELECT * FROM clientes WHERE nombres_y_apellidos LIKE '%$search%' AND deleted = 0";
-}
-$result = $conn->query($sql);
-
-// Obtener clientes eliminados
-$sql_eliminados = "SELECT * FROM clientes WHERE deleted = 1";
-$result_eliminados = $conn->query($sql_eliminados);
 ?>
 
 <!DOCTYPE html>

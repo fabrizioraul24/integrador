@@ -38,79 +38,270 @@ function obtener_siguiente_numero($archivo) {
 if (isset($_GET['reporte_ventas'])) {
     require('fpdf/fpdf.php');
     
-    // Obtener datos de ventas
+    class PDF extends FPDF {
+        private $headerColor = array(41, 84, 144); // Azul corporativo #295490
+        private $accentColor = array(230, 126, 34); // Naranja elegante #E67E22
+        private $lightBlue = array(236, 245, 255); // Azul muy claro #ECF5FF
+        private $darkGray = array(52, 73, 94); // Gris oscuro #34495E
+        
+        function Header() {
+            // Fondo para el header
+            $this->SetFillColor($this->headerColor[0], $this->headerColor[1], $this->headerColor[2]);
+            $this->Rect(0, 0, 210, 45, 'F');
+            
+            // Logo
+            $this->Image('../views/logo/sinf.png', 15, 8, 35);
+            
+            // Título principal
+            $this->SetFont('Arial', 'B', 22);
+            $this->SetTextColor(255, 255, 255);
+            $this->SetXY(60, 12);
+            $this->Cell(0, 8, 'PIL ANDINA', 0, 1, 'L');
+            
+            // Subtítulo
+            $this->SetFont('Arial', '', 14);
+            $this->SetXY(60, 22);
+            $this->Cell(0, 6, 'REPORTE DE VENTAS DEL SISTEMA', 0, 1, 'L');
+            
+            // Línea decorativa
+            $this->SetDrawColor($this->accentColor[0], $this->accentColor[1], $this->accentColor[2]);
+            $this->SetLineWidth(2);
+            $this->Line(60, 32, 190, 32);
+            
+            // Fecha en esquina superior derecha
+            $this->SetFont('Arial', '', 9);
+            $this->SetXY(140, 35);
+            $this->Cell(0, 4, 'Fecha: ' . date("d/m/Y H:i"), 0, 0, 'R');
+            
+            $this->Ln(15);
+        }
+        
+        function Footer() {
+            $this->SetY(-25);
+            
+            // Línea decorativa en footer
+            $this->SetDrawColor($this->headerColor[0], $this->headerColor[1], $this->headerColor[2]);
+            $this->SetLineWidth(0.5);
+            $this->Line(15, $this->GetY(), 195, $this->GetY());
+            
+            $this->Ln(3);
+            
+            // Información del documento en dos columnas
+            $this->SetFont('Arial', '', 8);
+            $this->SetTextColor($this->darkGray[0], $this->darkGray[1], $this->darkGray[2]);
+            
+            // Columna izquierda
+            $this->SetX(15);
+            $this->Cell(90, 4, 'Código: ' . $GLOBALS['codigo_reporte'], 0, 0, 'L');
+            
+            // Columna derecha
+            $this->Cell(0, 4, 'Página ' . $this->PageNo() . ' de {nb}', 0, 0, 'R');
+            
+            $this->Ln(4);
+            $this->SetX(15);
+            $this->Cell(0, 4, '© PIL ANDINA - Sistema de Información Gerencial', 0, 0, 'C');
+        }
+        
+        function CreateInfoBox($title, $content, $x, $y, $width, $height) {
+            // Caja con sombra
+            $this->SetFillColor(200, 200, 200);
+            $this->Rect($x + 1, $y + 1, $width, $height, 'F');
+            
+            // Caja principal
+            $this->SetFillColor($this->lightBlue[0], $this->lightBlue[1], $this->lightBlue[2]);
+            $this->SetDrawColor($this->headerColor[0], $this->headerColor[1], $this->headerColor[2]);
+            $this->SetLineWidth(0.5);
+            $this->Rect($x, $y, $width, $height, 'DF');
+            
+            // Título
+            $this->SetXY($x + 5, $y + 3);
+            $this->SetFont('Arial', 'B', 10);
+            $this->SetTextColor($this->headerColor[0], $this->headerColor[1], $this->headerColor[2]);
+            $this->Cell(0, 5, $title, 0, 1, 'L');
+            
+            // Contenido
+            $this->SetX($x + 5);
+            $this->SetFont('Arial', '', 9);
+            $this->SetTextColor($this->darkGray[0], $this->darkGray[1], $this->darkGray[2]);
+            $this->Cell(0, 5, $content, 0, 1, 'L');
+        }
+        
+        function CreateSectionTitle($title) {
+            $this->Ln(5);
+            
+            // Fondo para el título de sección
+            $this->SetFillColor($this->accentColor[0], $this->accentColor[1], $this->accentColor[2]);
+            $this->Rect(15, $this->GetY(), 180, 8, 'F');
+            
+            $this->SetFont('Arial', 'B', 12);
+            $this->SetTextColor(255, 255, 255);
+            $this->SetX(15);
+            $this->Cell(180, 8, $title, 0, 1, 'C');
+            
+            $this->Ln(3);
+        }
+        
+        // Método RoundRect para compatibilidad
+        function RoundRect($x, $y, $w, $h, $r, $style = '') {
+            $k = $this->k;
+            $hp = $this->h;
+            if ($style == 'F')
+                $op = 'f';
+            elseif ($style == 'FD' || $style == 'DF')
+                $op = 'B';
+            else
+                $op = 'S';
+            $MyArc = 4/3 * (sqrt(2) - 1);
+            $this->_out(sprintf('%.2F %.2F m', ($x+$r)*$k, ($hp-$y)*$k));
+            $xc = $x+$w-$r;
+            $yc = $y+$r;
+            $this->_out(sprintf('%.2F %.2F l', $xc*$k, ($hp-$y)*$k));
+            $this->_Arc($xc + $r*$MyArc, $yc - $r, $xc + $r, $yc - $r*$MyArc, $xc + $r, $yc);
+            $xc = $x+$w-$r;
+            $yc = $y+$h-$r;
+            $this->_out(sprintf('%.2F %.2F l', ($x+$w)*$k, ($hp-$yc)*$k));
+            $this->_Arc($xc + $r, $yc + $r*$MyArc, $xc + $r*$MyArc, $yc + $r, $xc, $yc + $r);
+            $xc = $x+$r;
+            $yc = $y+$h-$r;
+            $this->_out(sprintf('%.2F %.2F l', $xc*$k, ($hp-($y+$h))*$k));
+            $this->_Arc($xc - $r*$MyArc, $yc + $r, $xc - $r, $yc + $r*$MyArc, $xc - $r, $yc);
+            $xc = $x+$r;
+            $yc = $y+$r;
+            $this->_out(sprintf('%.2F %.2F l', ($x)*$k, ($hp-$yc)*$k));
+            $this->_Arc($xc - $r, $yc - $r*$MyArc, $xc - $r*$MyArc, $yc - $r, $xc, $yc - $r);
+            $this->_out($op);
+        }
+
+        function _Arc($x1, $y1, $x2, $y2, $x3, $y3) {
+            $h = $this->h;
+            $this->_out(sprintf('%.2F %.2F %.2F %.2F %.2F %.2F c ', $x1*$this->k, ($h-$y1)*$this->k,
+                $x2*$this->k, ($h-$y2)*$this->k, $x3*$this->k, ($h-$y3)*$this->k));
+        }
+    }
+    
+    // Consulta SQL para ventas
     $sql = "SELECT v.id_venta, v.fecha_venta, v.total, 
                    c.nombres_y_apellidos as cliente
             FROM ventas v
             JOIN clientes c ON v.id_cliente = c.id_cliente
             ORDER BY v.fecha_venta DESC";
-    
     $result = $conn->query($sql);
     
-    // Obtener el siguiente número de reporte
+    // Generar código del reporte
     $numero_reporte = obtener_siguiente_numero($archivo_numeracion);
-    
-    // Crear el código único del reporte
     $fecha_actual = date("d-m-Y");
-    $hora_actual = date("H-i");
+    $hora_actual = date("H:i");
     $codigo_reporte = "REP-VENTAS-$numero_reporte-$fecha_actual-$hora_actual";
     
-    // Crear PDF
-    $pdf = new FPDF('L', 'mm', 'A4');
+    // Crear PDF en orientación vertical
+    $pdf = new PDF('P', 'mm', 'A4');
     $pdf->AddPage();
     $pdf->AliasNbPages();
     
-    // Encabezado
-    $pdf->SetFont('Arial', 'B', 16);
-    $pdf->SetTextColor(78, 107, 175);
-    $pdf->Cell(0, 10, 'REPORTE DE VENTAS - PIL ANDINA', 0, 1, 'C');
+    // Código del reporte destacado
+    $pdf->SetFont('Arial', 'B', 14);
+    $pdf->SetTextColor(230, 126, 34); // Naranja #E67E22
+    $pdf->SetFillColor(255, 248, 220); // Amarillo claro #FFF8DC
+    $pdf->Rect(15, $pdf->GetY(), 180, 12, 'F');
+    $pdf->Cell(180, 12, 'CÓDIGO DEL REPORTE: ' . $codigo_reporte, 0, 1, 'C');
     
-    // Código del reporte
-    $pdf->SetFont('Arial', 'B', 12);
-    $pdf->SetTextColor(255, 0, 0);
-    $pdf->Cell(0, 10, 'Codigo del Reporte: ' . $codigo_reporte, 0, 1, 'C');
-    $pdf->SetTextColor(0, 0, 0);
+    $pdf->Ln(8);
     
-    // Información de generación
-    $pdf->SetFont('Arial', '', 10);
-    $pdf->Cell(40, 7, 'Fecha de generacion:', 0, 0);
-    $pdf->Cell(0, 7, date("d/m/Y H:i:s"), 0, 1);
+    // Información del reporte en cajas elegantes
+    $usuario_generado = isset($_SESSION['nombre_usu']) ? $_SESSION['nombre_usu'] : 'Desconocido';
     
-    $pdf->Ln(10);
+    $pdf->CreateInfoBox('FECHA DE GENERACIÓN', date("d/m/Y H:i:s"), 15, $pdf->GetY(), 85, 15);
+    $pdf->CreateInfoBox('GENERADO POR', $usuario_generado, 110, $pdf->GetY() - 15, 85, 15);
     
-    // Tabla de ventas
-    $pdf->SetFont('Arial', 'B', 11);
-    $pdf->SetFillColor(78, 107, 175);
+    $pdf->Ln(20);
+    
+    // Título de la sección de datos
+    $pdf->CreateSectionTitle('LISTADO DE VENTAS REGISTRADAS');
+    
+    // Encabezados de tabla
+    $pdf->SetFont('Arial', 'B', 10);
+    $pdf->SetFillColor(41, 84, 144); // Azul #295490
     $pdf->SetTextColor(255, 255, 255);
-    $pdf->Cell(15, 10, '#', 1, 0, 'C', true);
-    $pdf->Cell(30, 10, 'ID VENTA', 1, 0, 'C', true);
-    $pdf->Cell(50, 10, 'FECHA', 1, 0, 'C', true);
-    $pdf->Cell(80, 10, 'CLIENTE', 1, 0, 'C', true);
-    $pdf->Cell(30, 10, 'TOTAL', 1, 1, 'C', true);
+    $pdf->SetDrawColor(255, 255, 255);
+    $pdf->SetLineWidth(0.3);
     
-    // Contenido de la tabla
-    $pdf->SetFont('Arial', '', 10);
-    $pdf->SetTextColor(0, 0, 0);
-    $pdf->SetFillColor(240, 245, 255);
+    $pdf->Cell(15, 12, '#', 1, 0, 'C', true);
+    $pdf->Cell(25, 12, 'ID VENTA', 1, 0, 'C', true);
+    $pdf->Cell(40, 12, 'FECHA', 1, 0, 'C', true);
+    $pdf->Cell(60, 12, 'CLIENTE', 1, 0, 'C', true);
+    $pdf->Cell(30, 12, 'TOTAL', 1, 1, 'C', true);
+    
+    // Datos de la tabla con alternancia de colores
+    $pdf->SetFont('Arial', '', 9);
+    $pdf->SetTextColor(52, 73, 94); // Gris oscuro #34495E
+    $pdf->SetDrawColor(189, 195, 199);
     
     $row_num = 0;
+    $total_ventas = 0;
     while ($row = $result->fetch_assoc()) {
-        $fill = ($row_num % 2) ? true : false;
-        $pdf->Cell(15, 8, ++$row_num, 1, 0, 'C', $fill);
-        $pdf->Cell(30, 8, $row['id_venta'], 1, 0, 'C', $fill);
-        $pdf->Cell(50, 8, $row['fecha_venta'], 1, 0, 'C', $fill);
-        $pdf->Cell(80, 8, utf8_decode($row['cliente']), 1, 0, 'L', $fill);
-        $pdf->Cell(30, 8, number_format($row['total'], 2), 1, 1, 'R', $fill);
+        $row_num++;
+        $total_ventas += $row['total'];
+        
+        // Colores alternados
+        if ($row_num % 2) {
+            $pdf->SetFillColor(250, 252, 255); // Azul muy claro #FAFCFF
+        } else {
+            $pdf->SetFillColor(255, 255, 255); // Blanco
+        }
+        
+        // Resaltar cada 5 filas
+        if ($row_num % 5 == 0) {
+            $pdf->SetFillColor(255, 248, 220); // Amarillo claro #FFF8DC
+        }
+        
+        $pdf->Cell(15, 10, $row_num, 1, 0, 'C', true);
+        $pdf->Cell(25, 10, $row['id_venta'], 1, 0, 'C', true);
+        $pdf->Cell(40, 10, substr($row['fecha_venta'], 0, 10), 1, 0, 'C', true);
+        $pdf->Cell(60, 10, substr(utf8_decode($row['cliente'] ? $row['cliente'] : 'Sin cliente'), 0, 45), 1, 0, 'L', true);
+        $pdf->Cell(30, 10, number_format($row['total'], 2), 1, 1, 'R', true);
+        
+        // Añadir página si es necesario
+        if ($pdf->GetY() > 250) {
+            $pdf->AddPage();
+            
+            // Repetir encabezados
+            $pdf->SetFont('Arial', 'B', 10);
+            $pdf->SetFillColor(41, 84, 144);
+            $pdf->SetTextColor(255, 255, 255);
+            $pdf->SetDrawColor(255, 255, 255);
+            $pdf->SetLineWidth(0.3);
+            
+            $pdf->Cell(15, 12, '#', 1, 0, 'C', true);
+            $pdf->Cell(25, 12, 'ID VENTA', 1, 0, 'C', true);
+            $pdf->Cell(40, 12, 'FECHA', 1, 0, 'C', true);
+            $pdf->Cell(90, 12, 'CLIENTE', 1, 0, 'C', true);
+            $pdf->Cell(30, 12, 'TOTAL', 1, 1, 'C', true);
+            
+            $pdf->SetFont('Arial', '', 9);
+            $pdf->SetTextColor(52, 73, 94);
+            $pdf->SetDrawColor(189, 195, 199);
+        }
     }
     
-    // Pie de página
-    $pdf->SetY(-20);
-    $pdf->SetFont('Arial', 'I', 8);
-    $pdf->Cell(0, 5, 'Codigo del documento: ' . $codigo_reporte, 0, 1, 'L');
-    $pdf->Cell(0, 5, 'Pagina ' . $pdf->PageNo() . ' de {nb}', 0, 0, 'C');
+    // Resumen final
+    $pdf->Ln(10);
     
-    // Salida del PDF
-    $pdf->Output('I', 'Reporte_Ventas_' . $codigo_reporte . '.pdf');
+    $pdf->SetFont('Arial', 'B', 11);
+    $pdf->SetTextColor(41, 84, 144);
+    $pdf->SetFillColor(236, 245, 255);
+    $pdf->Rect(15, $pdf->GetY(), 180, 10, 'F');
+    $pdf->Cell(180, 10, 'TOTAL DE VENTAS REGISTRADAS: ' . $row_num, 0, 1, 'C');
+    
+    $pdf->Ln(5);
+    $pdf->Rect(15, $pdf->GetY(), 180, 10, 'F');
+    $pdf->Cell(180, 10, 'MONTO TOTAL: BS ' . number_format($total_ventas, 2), 0, 1, 'C');
+    
+    // Limpiar el búfer antes de enviar el PDF
+    ob_end_clean();
+    
+    // Generar y mostrar PDF
+    $pdf->Output('I', 'Reporte_Ventas_PIL_Andina_' . $codigo_reporte . '.pdf');
+    
     exit();
 }
 
