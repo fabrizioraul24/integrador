@@ -216,16 +216,62 @@ if (isset($_GET['report'])) {
 
     $pdf = new FPDF('P', 'mm', 'A4');
     $pdf->AddPage();
-    $pdf->SetAutoPageBreak(true, 15);
-    $pdf->SetFont('Arial', 'B', 18);
-    $pdf->SetTextColor(50, 100, 150);
-    $pdf->Cell(0, 10, 'Reporte Bot - Pil Andina', 0, 1, 'C');
-    $pdf->SetFont('Arial', 'I', 12);
-    $pdf->Cell(0, 10, 'Generado por tu Asistente Virtual ✨', 0, 1, 'C');
-    $pdf->SetFont('Arial', '', 10);
-    $pdf->Cell(0, 10, 'Fecha: ' . date('d/m/Y H:i'), 0, 1);
-    $pdf->Ln(10);
+    $pdf->SetAutoPageBreak(true, 20);
 
+    // ===== HEADER EMPRESARIAL CON ESPACIO PARA LOGO =====
+    // Fondo degradado del header (simulado con rectángulos)
+    $pdf->SetFillColor(25, 42, 86); // Azul corporativo oscuro
+    $pdf->Rect(0, 0, 210, 45, 'F');
+    
+    $pdf->SetFillColor(35, 62, 116); // Azul corporativo medio
+    $pdf->Rect(0, 30, 210, 15, 'F');
+
+    // Logo de la empresa
+    $pdf->Image('../views/logo/sinf.png', 15, 8, 35, 25);
+
+    // Título principal
+    $pdf->SetFont('Arial', 'B', 20);
+    $pdf->SetTextColor(255, 255, 255);
+    $pdf->SetXY(55, 12);
+    $pdf->Cell(140, 10, 'REPORTE INTELIGENTE', 0, 1, 'L');
+    
+    $pdf->SetFont('Arial', '', 14);
+    $pdf->SetXY(55, 22);
+    $pdf->Cell(140, 8, 'PIL ANDINA - Business Intelligence', 0, 1, 'L');
+
+    // Línea de separación con efecto moderno
+    $pdf->SetDrawColor(0, 184, 169); // Verde agua corporativo
+    $pdf->SetLineWidth(2);
+    $pdf->Line(15, 40, 195, 40);
+
+    // Información del reporte en el header
+    $pdf->SetFont('Arial', 'B', 10);
+    $pdf->SetTextColor(255, 255, 255);
+    $pdf->SetXY(140, 32);
+    $pdf->Cell(50, 6, 'Generado: ' . date('d/m/Y H:i'), 0, 0, 'R');
+
+    // ===== SECCIÓN DE INFORMACIÓN DEL BOT =====
+    $pdf->SetY(55);
+    $pdf->SetFillColor(248, 250, 252); // Gris muy claro
+    $pdf->Rect(15, 55, 180, 25, 'F');
+    
+    // Icono del bot (simulado con círculo)
+    $pdf->SetFillColor(0, 184, 169);
+    $pdf->Rect(23, 63, 4, 4, 'F'); // Cuadrado que simula el icono del bot
+    
+    $pdf->SetFont('Arial', 'B', 11);
+    $pdf->SetTextColor(50, 50, 50);
+    $pdf->SetXY(35, 60);
+    $pdf->Cell(0, 6, 'Reporte Generado por IA - Asistente Virtual PIL ANDINA', 0, 1);
+    
+    $pdf->SetFont('Arial', '', 9);
+    $pdf->SetTextColor(100, 100, 100);
+    $pdf->SetXY(35, 68);
+    $pdf->Cell(0, 5, 'Analisis automatizado de datos empresariales | Procesamiento inteligente de informacion', 0, 1);
+
+    $pdf->SetY(90);
+
+    // ===== CONTENIDO DEL REPORTE =====
     if ($reportType === 'category') {
         $sql = "SELECT c.nombre_categoria, p.nombre_producto, SUM(dv.cantidad) as total_vendido, p.precio
                 FROM productos p
@@ -238,22 +284,78 @@ if (isset($_GET['report'])) {
         $stmt->bind_param("i", $category);
         $stmt->execute();
         $result = $stmt->get_result();
+        
         if ($result->num_rows > 0) {
+            // Título del reporte con diseño moderno
+            $pdf->SetFillColor(25, 42, 86);
+            $pdf->Rect(15, $pdf->GetY(), 180, 12, 'F');
+            
             $pdf->SetFont('Arial', 'B', 14);
-            $pdf->Cell(0, 10, "Reporte de Ventas por Categoría: $category", 0, 1, 'C');
-            $pdf->SetFillColor(230, 240, 255);
-            $pdf->SetFont('Arial', '', 10);
-            $pdf->Cell(50, 10, 'Producto', 1, 0, 'C', true);
-            $pdf->Cell(40, 10, 'Total Vendido', 1, 0, 'C', true);
-            $pdf->Cell(40, 10, 'Precio', 1, 1, 'C', true);
+            $pdf->SetTextColor(255, 255, 255);
+            $pdf->SetXY(20, $pdf->GetY() + 2);
+            $pdf->Cell(0, 8, "ANALISIS DE VENTAS POR CATEGORIA", 0, 1);
+            
+            $pdf->SetFont('Arial', 'B', 12);
+            $pdf->SetTextColor(25, 42, 86);
+            $pdf->SetXY(20, $pdf->GetY() + 3);
+            $pdf->Cell(0, 8, "Categoria: " . strtoupper($category), 0, 1);
+            
+            $pdf->Ln(5);
+
+            // Encabezados de tabla con estilo moderno
+            $pdf->SetFillColor(240, 245, 250);
+            $pdf->SetDrawColor(180, 180, 180);
+            $pdf->SetLineWidth(0.3);
+            $pdf->SetFont('Arial', 'B', 10);
+            $pdf->SetTextColor(60, 60, 60);
+            
+            $pdf->Cell(80, 12, 'PRODUCTO', 1, 0, 'C', true);
+            $pdf->Cell(45, 12, 'UNIDADES VENDIDAS', 1, 0, 'C', true);
+            $pdf->Cell(45, 12, 'PRECIO UNITARIO', 1, 1, 'C', true);
+
+            // Datos de la tabla con alternancia de colores
+            $pdf->SetFont('Arial', '', 9);
+            $fill = false;
+            $totalVendido = 0;
+            $totalIngresos = 0;
+            
             while ($row = $result->fetch_assoc()) {
-                $pdf->Cell(50, 10, $row['nombre_producto'], 1, 0, 'C');
-                $pdf->Cell(40, 10, $row['total_vendido'] ?: '0', 1, 0, 'C');
-                $pdf->Cell(40, 10, number_format($row['precio'], 2), 1, 1, 'C');
+                if ($fill) {
+                    $pdf->SetFillColor(252, 254, 255);
+                } else {
+                    $pdf->SetFillColor(255, 255, 255);
+                }
+                
+                $cantidad = $row['total_vendido'] ?: 0;
+                $precio = $row['precio'];
+                $totalVendido += $cantidad;
+                $totalIngresos += ($cantidad * $precio);
+                
+                $pdf->Cell(80, 10, $row['nombre_producto'], 1, 0, 'L', true);
+                $pdf->Cell(45, 10, number_format($cantidad), 1, 0, 'C', true);
+                $pdf->Cell(45, 10, 'Bs. ' . number_format($precio, 2), 1, 1, 'R', true);
+                
+                $fill = !$fill;
             }
+            
+            // Totales con diseño destacado
+            $pdf->SetFillColor(25, 42, 86);
+            $pdf->SetTextColor(255, 255, 255);
+            $pdf->SetFont('Arial', 'B', 10);
+            $pdf->Cell(80, 12, 'TOTALES', 1, 0, 'C', true);
+            $pdf->Cell(45, 12, number_format($totalVendido), 1, 0, 'C', true);
+            $pdf->Cell(45, 12, 'Bs. ' . number_format($totalIngresos, 2), 1, 1, 'R', true);
+            
         } else {
-            $pdf->Cell(0, 10, 'No hay datos disponibles para esta categoría.', 0, 1);
+            // Mensaje cuando no hay datos
+            $pdf->SetFillColor(255, 248, 240);
+            $pdf->Rect(15, $pdf->GetY(), 180, 30, 'F');
+            $pdf->SetTextColor(150, 100, 50);
+            $pdf->SetFont('Arial', 'B', 12);
+            $pdf->SetXY(20, $pdf->GetY() + 10);
+            $pdf->Cell(0, 10, 'No hay datos disponibles para esta categoria', 0, 1, 'C');
         }
+        
     } elseif ($reportType === 'presentation') {
         $sql = "SELECT tipo_de_presentacion, nombre_producto, SUM(dv.cantidad) as total_vendido, precio
                 FROM productos p
@@ -265,30 +367,99 @@ if (isset($_GET['report'])) {
         $stmt->bind_param("s", $presentation);
         $stmt->execute();
         $result = $stmt->get_result();
+        
         if ($result->num_rows > 0) {
+            // Título del reporte con diseño moderno
+            $pdf->SetFillColor(139, 69, 19); // Marrón corporativo
+            $pdf->Rect(15, $pdf->GetY(), 180, 12, 'F');
+            
             $pdf->SetFont('Arial', 'B', 14);
-            $pdf->Cell(0, 10, "Reporte de Ventas por Presentación: $presentation", 0, 1, 'C');
-            $pdf->SetFillColor(255, 230, 240); // Rosa suave para un toque estético
-            $pdf->SetTextColor(120, 60, 90); // Morado suave
-            $pdf->SetFont('Arial', '', 10);
-            $pdf->Cell(50, 10, 'Producto', 1, 0, 'C', true);
-            $pdf->Cell(40, 10, 'Total Vendido', 1, 0, 'C', true);
-            $pdf->Cell(40, 10, 'Precio', 1, 1, 'C', true);
+            $pdf->SetTextColor(255, 255, 255);
+            $pdf->SetXY(20, $pdf->GetY() + 2);
+            $pdf->Cell(0, 8, "ANALISIS DE VENTAS POR PRESENTACION", 0, 1);
+            
+            $pdf->SetFont('Arial', 'B', 12);
+            $pdf->SetTextColor(139, 69, 19);
+            $pdf->SetXY(20, $pdf->GetY() + 3);
+            $pdf->Cell(0, 8, "Presentacion: " . strtoupper($presentation), 0, 1);
+            
+            $pdf->Ln(5);
+
+            // Encabezados de tabla
+            $pdf->SetFillColor(255, 248, 240);
+            $pdf->SetDrawColor(180, 180, 180);
+            $pdf->SetLineWidth(0.3);
+            $pdf->SetFont('Arial', 'B', 10);
+            $pdf->SetTextColor(60, 60, 60);
+            
+            $pdf->Cell(80, 12, 'PRODUCTO', 1, 0, 'C', true);
+            $pdf->Cell(45, 12, 'UNIDADES VENDIDAS', 1, 0, 'C', true);
+            $pdf->Cell(45, 12, 'PRECIO UNITARIO', 1, 1, 'C', true);
+
+            // Datos de la tabla
+            $pdf->SetFont('Arial', '', 9);
+            $fill = false;
+            $totalVendido = 0;
+            $totalIngresos = 0;
+            
             while ($row = $result->fetch_assoc()) {
-                $pdf->Cell(50, 10, $row['nombre_producto'], 1, 0, 'C');
-                $pdf->Cell(40, 10, $row['total_vendido'] ?: '0', 1, 0, 'C');
-                $pdf->Cell(40, 10, number_format($row['precio'], 2), 1, 1, 'C');
+                if ($fill) {
+                    $pdf->SetFillColor(255, 252, 248);
+                } else {
+                    $pdf->SetFillColor(255, 255, 255);
+                }
+                
+                $cantidad = $row['total_vendido'] ?: 0;
+                $precio = $row['precio'];
+                $totalVendido += $cantidad;
+                $totalIngresos += ($cantidad * $precio);
+                
+                $pdf->Cell(80, 10, $row['nombre_producto'], 1, 0, 'L', true);
+                $pdf->Cell(45, 10, number_format($cantidad), 1, 0, 'C', true);
+                $pdf->Cell(45, 10, 'Bs. ' . number_format($precio, 2), 1, 1, 'R', true);
+                
+                $fill = !$fill;
             }
+            
+            // Totales
+            $pdf->SetFillColor(139, 69, 19);
+            $pdf->SetTextColor(255, 255, 255);
+            $pdf->SetFont('Arial', 'B', 10);
+            $pdf->Cell(80, 12, 'TOTALES', 1, 0, 'C', true);
+            $pdf->Cell(45, 12, number_format($totalVendido), 1, 0, 'C', true);
+            $pdf->Cell(45, 12, 'Bs. ' . number_format($totalIngresos, 2), 1, 1, 'R', true);
+            
         } else {
-            $pdf->Cell(0, 10, 'No hay datos disponibles para esta presentación.', 0, 1);
+            // Mensaje cuando no hay datos
+            $pdf->SetFillColor(255, 248, 240);
+            $pdf->Rect(15, $pdf->GetY(), 180, 30, 'F');
+            $pdf->SetTextColor(150, 100, 50);
+            $pdf->SetFont('Arial', 'B', 12);
+            $pdf->SetXY(20, $pdf->GetY() + 10);
+            $pdf->Cell(0, 10, 'No hay datos disponibles para esta presentacion', 0, 1, 'C');
         }
     }
 
-    $pdf->SetY(-15);
-    $pdf->SetFont('Arial', 'I', 8);
-    $pdf->SetTextColor(0, 0, 0);
-    $pdf->Cell(0, 5, 'Hecho por Falconbot - ' . date('Y'), 0, 0, 'C');
-    $pdf->Output('I', 'Reporte_Bot_' . $reportType . '_' . ($id ?: $category) . '_' . date('Ymd_His') . '.pdf');
+    // ===== FOOTER EMPRESARIAL =====
+    $pdf->SetY(-25);
+    
+    // Línea decorativa en el footer
+    $pdf->SetDrawColor(0, 184, 169);
+    $pdf->SetLineWidth(1);
+    $pdf->Line(15, $pdf->GetY(), 195, $pdf->GetY());
+    
+    $pdf->SetY(-20);
+    $pdf->SetFont('Arial', 'B', 9);
+    $pdf->SetTextColor(25, 42, 86);
+    $pdf->Cell(0, 5, 'FalconBot AI - Sistema Inteligente de Reportes', 0, 1, 'C');
+    
+    $pdf->SetFont('Arial', '', 8);
+    $pdf->SetTextColor(100, 100, 100);
+    $pdf->Cell(0, 4, 'PIL ANDINA (c) ' . date('Y') . ' | Tecnologia de Inteligencia Artificial aplicada', 0, 0, 'C');
+
+    // Generar archivo con nombre descriptivo
+    $filename = 'Reporte_Inteligente_' . ucfirst($reportType) . '_' . date('Ymd_His') . '.pdf';
+    $pdf->Output('I', $filename);
     exit;
 }
 ?>

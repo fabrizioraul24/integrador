@@ -1,11 +1,7 @@
 <?php
-// Iniciar sesión para acceder a la variable $_SESSION
 session_start();
-
-// Configurar la zona horaria para Bolivia
 date_default_timezone_set('America/La_Paz');
 
-// Conexión a la base de datos
 $host = '127.0.0.1';
 $user = 'root';
 $pass = '';
@@ -14,15 +10,13 @@ $port = 3308;
 
 $conn = new mysqli($host, $user, $pass, $db, $port);
 
-if ($conn->connect_error) {
+if ($conn->connect_error) { // Opening brace for connection error check
     die("Error de conexión: " . $conn->connect_error);
-}
+} // Closing brace for connection error check
 
-// Modificar la tabla clientes para agregar el campo de borrado lógico
 $conn->query("ALTER TABLE clientes ADD COLUMN IF NOT EXISTS deleted TINYINT(1) DEFAULT 0");
 $conn->query("ALTER TABLE clientes ADD COLUMN IF NOT EXISTS deleted_at DATETIME DEFAULT NULL");
 
-// Crear tabla de clientes eliminados si no existe
 $conn->query("CREATE TABLE IF NOT EXISTS clientes_eliminados (
     id_cliente INT PRIMARY KEY,
     nombres_y_apellidos VARCHAR(255),
@@ -33,14 +27,12 @@ $conn->query("CREATE TABLE IF NOT EXISTS clientes_eliminados (
     deleted_at DATETIME
 )");
 
-// Inicializar variables
 $archivo_numeracion = 'ultimo_numero_reporte.txt';
 $search = isset($_GET['search']) ? $_GET['search'] : '';
 
-// Procesar formularios
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['accion'])) {
-        switch ($_POST['accion']) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Opening brace for POST handling
+    if (isset($_POST['accion'])) { // Opening brace for accion check
+        switch ($_POST['accion']) { // Opening brace for switch
             case 'agregar':
                 $nombre = $conn->real_escape_string($_POST['nombre']);
                 $direccion = $conn->real_escape_string($_POST['direccion']);
@@ -50,13 +42,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 $sql = "INSERT INTO clientes (nombres_y_apellidos, direccion, telefono, NIT, email) 
                         VALUES ('$nombre', '$direccion', '$telefono', '$nit', '$email')";
-                if ($conn->query($sql)) {
+                if ($conn->query($sql)) { // Opening brace for insert success
                     $mensaje = "Cliente agregado correctamente";
                     $tipo_mensaje = "success";
-                } else {
+                } else { // Opening brace for insert failure
                     $mensaje = "Error al agregar cliente: " . $conn->error;
                     $tipo_mensaje = "error";
-                }
+                } // Closing brace for insert failure
                 break;
                 
             case 'editar':
@@ -74,167 +66,165 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         NIT = '$nit',
                         email = '$email'
                         WHERE id_cliente = $id";
-                if ($conn->query($sql)) {
+                if ($conn->query($sql)) { // Opening brace for update success
                     $mensaje = "Cliente actualizado correctamente";
                     $tipo_mensaje = "success";
-                } else {
+                } else { // Opening brace for update failure
                     $mensaje = "Error al actualizar cliente: " . $conn->error;
                     $tipo_mensaje = "error";
-                }
+                } // Closing brace for update failure
                 break;
                 
             case 'restaurar':
                 $id = intval($_POST['id_cliente']);
                 $sql = "UPDATE clientes SET deleted = 0, deleted_at = NULL WHERE id_cliente = $id";
-                if ($conn->query($sql)) {
+                if ($conn->query($sql)) { // Opening brace for restore success
+                    $sql = "DELETE FROM clientes_eliminados WHERE id_cliente = $id";
+                    $conn->query($sql);
                     $mensaje = "Cliente restaurado correctamente";
                     $tipo_mensaje = "success";
-                } else {
+                } else { // Opening brace for restore failure
                     $mensaje = "Error al restaurar cliente: " . $conn->error;
                     $tipo_mensaje = "error";
-                }
+                } // Closing brace for restore failure
                 break;
-        }
-    }
-}
+        } // Closing brace for switch
+    } // Closing brace for accion check
+} // Closing brace for POST handling
 
-// Procesar eliminación lógica
-if (isset($_GET['delete'])) {
+if (isset($_GET['delete'])) { // Opening brace for delete action
     $id = intval($_GET['delete']);
-    $sql = "UPDATE clientes SET deleted = 1, deleted_at = NOW() WHERE id_cliente = $id";
-    if ($conn->query($sql)) {
-        $mensaje = "Cliente marcado como eliminado";
-        $tipo_mensaje = "success";
-    } else {
-        $mensaje = "Error al eliminar cliente: " . $conn->error;
-        $tipo_mensaje = "error";
-    }
-}
-
-// Procesar eliminación permanente
-if (isset($_GET['delete_permanent'])) {
-    $id = intval($_GET['delete_permanent']);
     $sql = "INSERT INTO clientes_eliminados 
             SELECT id_cliente, nombres_y_apellidos, direccion, telefono, NIT, email, NOW() 
             FROM clientes WHERE id_cliente = $id";
     $conn->query($sql);
+    $sql = "UPDATE clientes SET deleted = 1, deleted_at = NOW() WHERE id_cliente = $id";
+    if ($conn->query($sql)) { // Opening brace for delete success
+        $mensaje = "Cliente marcado como eliminado";
+        $tipo_mensaje = "success";
+    } else { // Opening brace for delete failure
+        $mensaje = "Error al eliminar cliente: " . $conn->error;
+        $tipo_mensaje = "error";
+    } // Closing brace for delete failure
+} // Closing brace for delete action
+
+if (isset($_GET['delete_permanent'])) { // Opening brace for permanent delete
+    $id = intval($_GET['delete_permanent']);
     $sql = "DELETE FROM clientes WHERE id_cliente = $id";
-    if ($conn->query($sql)) {
+    if ($conn->query($sql)) { // Opening brace for permanent delete success
         $mensaje = "Cliente eliminado permanentemente";
         $tipo_mensaje = "success";
-    } else {
+    } else { // Opening brace for permanent delete failure
         $mensaje = "Error al eliminar cliente permanentemente: " . $conn->error;
         $tipo_mensaje = "error";
-    }
-}
+    } // Closing brace for permanent delete failure
+} // Closing brace for permanent delete
 
-// Función para obtener el siguiente número de reporte
-function obtener_siguiente_numero($archivo) {
+function obtener_siguiente_numero($archivo) { // Opening brace for function
     $numero = 100;
-    if (file_exists($archivo)) {
+    if (file_exists($archivo)) { // Opening brace for file check
         $numero = (int)file_get_contents($archivo);
-    }
+    } // Closing brace for file check
     $nuevo_numero = $numero + 1;
     file_put_contents($archivo, $nuevo_numero);
     return $nuevo_numero;
-}
+} // Closing brace for function
 
-// Generar reporte en PDF
-if (isset($_GET['reporte'])) {
+$sql = "SELECT * FROM clientes WHERE deleted = 0";
+if (!empty($search)) { // Opening brace for search check
+    $sql = "SELECT * FROM clientes WHERE nombres_y_apellidos LIKE ? AND deleted = 0";
+    $stmt = $conn->prepare($sql);
+    $search_param = "%$search%";
+    $stmt->bind_param("s", $search_param);
+    $stmt->execute();
+    $result = $stmt->get_result();
+} else { // Opening brace for no search
+    $result = $conn->query($sql);
+} // Closing brace for no search
+
+$sql_eliminados = "SELECT * FROM clientes_eliminados";
+$result_eliminados = $conn->query($sql_eliminados);
+
+if (isset($_GET['reporte'])) { // Opening brace for report generation
     require('fpdf/fpdf.php');
     
-    class PDF extends FPDF {
-        private $headerColor = array(41, 84, 144); // Azul corporativo #295490
-        private $accentColor = array(230, 126, 34); // Naranja elegante #E67E22
-        private $lightBlue = array(236, 245, 255); // Azul muy claro #ECF5FF
-        private $darkGray = array(52, 73, 94); // Gris oscuro #34495E
+    class PDF extends FPDF { // Opening brace for PDF class
+        private $headerColor = array(41, 84, 144);
+        private $accentColor = array(230, 126, 34);
+        private $lightBlue = array(236, 245, 255);
+        private $darkGray = array(52, 73, 94);
         
-        function Header() {
-            // Fondo degradado para el header
+        function Header() { // Opening brace for Header
             $this->SetFillColor($this->headerColor[0], $this->headerColor[1], $this->headerColor[2]);
             $this->Rect(0, 0, 210, 45, 'F');
             
-            // Logo con mejor posicionamiento
             $this->Image('../views/logo/sinf.png', 15, 8, 35);
             
-            // Título principal con mejor tipografía
             $this->SetFont('Arial', 'B', 22);
             $this->SetTextColor(255, 255, 255);
             $this->SetXY(60, 12);
             $this->Cell(0, 8, 'PIL ANDINA', 0, 1, 'L');
             
-            // Subtítulo
             $this->SetFont('Arial', '', 14);
             $this->SetXY(60, 22);
             $this->Cell(0, 6, 'REPORTE DE CLIENTES DEL SISTEMA', 0, 1, 'L');
             
-            // Línea decorativa
             $this->SetDrawColor($this->accentColor[0], $this->accentColor[1], $this->accentColor[2]);
             $this->SetLineWidth(2);
             $this->Line(60, 32, 190, 32);
             
-            // Fecha en esquina superior derecha
             $this->SetFont('Arial', '', 9);
             $this->SetXY(140, 35);
             $this->Cell(0, 4, 'Fecha: ' . date("d/m/Y H:i"), 0, 0, 'R');
             
             $this->Ln(15);
-        }
+        } // Closing brace for Header
         
-        function Footer() {
+        function Footer() { // Opening brace for Footer
             $this->SetY(-25);
             
-            // Línea decorativa en footer
             $this->SetDrawColor($this->headerColor[0], $this->headerColor[1], $this->headerColor[2]);
             $this->SetLineWidth(0.5);
             $this->Line(15, $this->GetY(), 195, $this->GetY());
             
             $this->Ln(3);
             
-            // Información del documento en dos columnas
             $this->SetFont('Arial', '', 8);
             $this->SetTextColor($this->darkGray[0], $this->darkGray[1], $this->darkGray[2]);
             
-            // Columna izquierda
             $this->SetX(15);
             $this->Cell(90, 4, 'Código: ' . $GLOBALS['codigo_reporte'], 0, 0, 'L');
             
-            // Columna derecha
             $this->Cell(0, 4, 'Página ' . $this->PageNo() . ' de {nb}', 0, 0, 'R');
             
             $this->Ln(4);
             $this->SetX(15);
             $this->Cell(0, 4, '© PIL ANDINA - Sistema de Información Gerencial', 0, 0, 'C');
-        }
+        } // Closing brace for Footer
         
-        function CreateInfoBox($title, $content, $x, $y, $width, $height) {
-            // Caja con sombra
+        function CreateInfoBox($title, $content, $x, $y, $width, $height) { // Opening brace for CreateInfoBox
             $this->SetFillColor(200, 200, 200);
             $this->Rect($x + 1, $y + 1, $width, $height, 'F');
             
-            // Caja principal
             $this->SetFillColor($this->lightBlue[0], $this->lightBlue[1], $this->lightBlue[2]);
             $this->SetDrawColor($this->headerColor[0], $this->headerColor[1], $this->headerColor[2]);
             $this->SetLineWidth(0.5);
             $this->Rect($x, $y, $width, $height, 'DF');
             
-            // Título
             $this->SetXY($x + 5, $y + 3);
             $this->SetFont('Arial', 'B', 10);
             $this->SetTextColor($this->headerColor[0], $this->headerColor[1], $this->headerColor[2]);
             $this->Cell(0, 5, $title, 0, 1, 'L');
             
-            // Contenido
             $this->SetX($x + 5);
             $this->SetFont('Arial', '', 9);
             $this->SetTextColor($this->darkGray[0], $this->darkGray[1], $this->darkGray[2]);
             $this->Cell(0, 5, $content, 0, 1, 'L');
-        }
+        } // Closing brace for CreateInfoBox
         
-        function CreateSectionTitle($title) {
+        function CreateSectionTitle($title) { // Opening brace for CreateSectionTitle
             $this->Ln(5);
             
-            // Fondo para el título de sección
             $this->SetFillColor($this->accentColor[0], $this->accentColor[1], $this->accentColor[2]);
             $this->Rect(15, $this->GetY(), 180, 8, 'F');
             
@@ -244,10 +234,9 @@ if (isset($_GET['reporte'])) {
             $this->Cell(180, 8, $title, 0, 1, 'C');
             
             $this->Ln(3);
-        }
+        } // Closing brace for CreateSectionTitle
         
-        // Método RoundRect para compatibilidad con el diseño
-        function RoundRect($x, $y, $w, $h, $r, $style = '') {
+        function RoundRect($x, $y, $w, $h, $r, $style = '') { // Opening brace for RoundRect
             $k = $this->k;
             $hp = $this->h;
             if ($style == 'F')
@@ -256,7 +245,7 @@ if (isset($_GET['reporte'])) {
                 $op = 'B';
             else
                 $op = 'S';
-            $MyArc = 4/3 * (sqrt(2) - 1); // Definir $MyArc
+            $MyArc = 4/3 * (sqrt(2) - 1);
             $this->_out(sprintf('%.2F %.2F m', ($x+$r)*$k, ($hp-$y)*$k));
             $xc = $x+$w-$r;
             $yc = $y+$r;
@@ -275,49 +264,44 @@ if (isset($_GET['reporte'])) {
             $this->_out(sprintf('%.2F %.2F l', ($x)*$k, ($hp-$yc)*$k));
             $this->_Arc($xc - $r, $yc - $r*$MyArc, $xc - $r*$MyArc, $yc - $r, $xc, $yc - $r);
             $this->_out($op);
-        }
+        } // Closing brace for RoundRect
 
-        function _Arc($x1, $y1, $x2, $y2, $x3, $y3) {
+        function _Arc($x1, $y1, $x2, $y2, $x3, $y3) { // Opening brace for _Arc
             $h = $this->h;
             $this->_out(sprintf('%.2F %.2F %.2F %.2F %.2F %.2F c ', $x1*$this->k, ($h-$y1)*$this->k,
                 $x2*$this->k, ($h-$y2)*$this->k, $x3*$this->k, ($h-$y3)*$this->k));
-        }
-    }
+        } // Closing brace for _Arc
+    } // Closing brace for PDF class
     
-    // Consulta SQL para clientes
     $sql = "SELECT * FROM clientes WHERE deleted = 0";
-    if (!empty($search)) {
+    if (!empty($search)) { // Opening brace for search check
         $sql = "SELECT * FROM clientes WHERE nombres_y_apellidos LIKE ? AND deleted = 0";
         $stmt = $conn->prepare($sql);
         $search_param = "%$search%";
         $stmt->bind_param("s", $search_param);
         $stmt->execute();
         $result = $stmt->get_result();
-    } else {
+    } else { // Opening brace for no search
         $result = $conn->query($sql);
-    }
+    } // Closing brace for no search
     
-    // Generar código del reporte
     $numero_reporte = obtener_siguiente_numero($archivo_numeracion);
     $fecha_actual = date("d-m-Y");
     $hora_actual = date("H:i");
     $codigo_reporte = "$numero_reporte-$fecha_actual-$hora_actual-$numero_reporte";
     
-    // Crear PDF
     $pdf = new PDF('P', 'mm', 'A4');
     $pdf->AddPage();
     $pdf->AliasNbPages();
     
-    // Código del reporte destacado
     $pdf->SetFont('Arial', 'B', 14);
-    $pdf->SetTextColor(230, 126, 34); // Color naranja
-    $pdf->SetFillColor(255, 248, 220); // Fondo amarillo muy claro
+    $pdf->SetTextColor(230, 126, 34);
+    $pdf->SetFillColor(255, 248, 220);
     $pdf->Rect(15, $pdf->GetY(), 180, 12, 'F');
     $pdf->Cell(180, 12, 'CÓDIGO DEL REPORTE: ' . $codigo_reporte, 0, 1, 'C');
     
     $pdf->Ln(8);
     
-    // Información del reporte en cajas elegantes
     $usuario_generado = isset($_SESSION['nombre_usu']) ? $_SESSION['nombre_usu'] : 'Desconocido';
     
     $pdf->CreateInfoBox('FECHA DE GENERACIÓN', date("d/m/Y H:i:s"), 15, $pdf->GetY(), 85, 15);
@@ -325,13 +309,9 @@ if (isset($_GET['reporte'])) {
     
     $pdf->Ln(20);
     
-    // Título de la sección de datos
     $pdf->CreateSectionTitle('LISTADO DE CLIENTES REGISTRADOS');
     
-    // Encabezados de tabla con diseño mejorado
     $pdf->SetFont('Arial', 'B', 10);
-    
-    // Gradiente para encabezado
     $pdf->SetFillColor(41, 84, 144);
     $pdf->SetTextColor(255, 255, 255);
     $pdf->SetDrawColor(255, 255, 255);
@@ -343,26 +323,23 @@ if (isset($_GET['reporte'])) {
     $pdf->Cell(30, 12, 'TELÉFONO', 1, 0, 'C', true);
     $pdf->Cell(25, 12, 'NIT', 1, 1, 'C', true);
     
-    // Datos de la tabla con alternancia de colores mejorada
     $pdf->SetFont('Arial', '', 9);
     $pdf->SetTextColor(52, 73, 94);
     $pdf->SetDrawColor(189, 195, 199);
     
     $row_num = 0;
-    while ($row = $result->fetch_assoc()) {
+    while ($row = $result->fetch_assoc()) { // Opening brace for while loop
         $row_num++;
         
-        // Colores alternados más elegantes
-        if ($row_num % 2) {
-            $pdf->SetFillColor(250, 252, 255); // Azul muy claro
-        } else {
-            $pdf->SetFillColor(255, 255, 255); // Blanco
-        }
+        if ($row_num % 2) { // Opening brace for row color
+            $pdf->SetFillColor(250, 252, 255);
+        } else { // Opening brace for alternate row color
+            $pdf->SetFillColor(255, 255, 255);
+        } // Closing brace for alternate row color
         
-        // Resaltar cada 5 filas con un color especial
-        if ($row_num % 5 == 0) {
-            $pdf->SetFillColor(255, 248, 220); // Amarillo muy claro
-        }
+        if ($row_num % 5 == 0) { // Opening brace for special row color
+            $pdf->SetFillColor(255, 248, 220);
+        } // Closing brace for special row color
         
         $pdf->Cell(20, 10, $row_num, 1, 0, 'C', true);
         $pdf->Cell(50, 10, substr($row['nombres_y_apellidos'], 0, 22), 1, 0, 'L', true);
@@ -370,11 +347,9 @@ if (isset($_GET['reporte'])) {
         $pdf->Cell(30, 10, $row['telefono'], 1, 0, 'C', true);
         $pdf->Cell(25, 10, $row['NIT'], 1, 1, 'C', true);
         
-        // Añadir página si es necesario
-        if ($pdf->GetY() > 250) {
+        if ($pdf->GetY() > 250) { // Opening brace for page break
             $pdf->AddPage();
             
-            // Repetir encabezados en nueva página
             $pdf->SetFont('Arial', 'B', 10);
             $pdf->SetFillColor(41, 84, 144);
             $pdf->SetTextColor(255, 255, 255);
@@ -390,10 +365,9 @@ if (isset($_GET['reporte'])) {
             $pdf->SetFont('Arial', '', 9);
             $pdf->SetTextColor(52, 73, 94);
             $pdf->SetDrawColor(189, 195, 199);
-        }
-    }
+        } // Closing brace for page break
+    } // Closing brace for while loop
     
-    // Resumen final
     $pdf->Ln(10);
     $total_clientes = $row_num;
     
@@ -403,17 +377,15 @@ if (isset($_GET['reporte'])) {
     $pdf->Rect(15, $pdf->GetY(), 180, 10, 'F');
     $pdf->Cell(180, 10, 'TOTAL DE CLIENTES REGISTRADOS: ' . $total_clientes, 0, 1, 'C');
     
-    // Limpiar el búfer antes de enviar el PDF
     ob_end_clean();
     
-    // Generar y mostrar PDF
     $pdf->Output('I', 'Reporte_Clientes_PIL_Andina_' . $codigo_reporte . '.pdf');
     
-    if (isset($stmt)) {
+    if (isset($stmt)) { // Opening brace for stmt check
         $stmt->close();
-    }
+    } // Closing brace for stmt check
     exit();
-}
+} // Closing brace for report generation
 ?>
 
 <!DOCTYPE html>
@@ -617,10 +589,8 @@ if (isset($_GET['reporte'])) {
     </style>
 </head>
 <body class="bg-gray-50 transition-colors duration-300 dark:bg-gray-900">
-    <!-- Sidebar -->
     <aside id="sidebar" class="fixed left-0 top-0 z-40 h-screen w-64 transition-transform duration-300 transform -translate-x-full lg:translate-x-0 sidebar-animation">
         <div class="h-full px-3 py-4 overflow-y-auto bg-white dark:bg-gray-800 shadow-2xl">
-            <!-- Logo -->
             <div class="flex items-center justify-center mb-8 p-4">
                 <div class="relative">
                     <div class="w-13 h-13 bg-gradient-primary rounded-full flex items-center justify-center shadow-lg animate-pulse-glow overflow-hidden">
@@ -634,7 +604,6 @@ if (isset($_GET['reporte'])) {
                 </div>
             </div>
 
-            <!-- Navigation -->
             <nav class="space-y-2">
                 <a href="../views/dashboard.php" class="flex items-center p-3 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-primary hover:text-white transition-all duration-300 group card-hover">
                     <div class="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center shadow-sm group-hover:shadow-lg transition-all duration-300">
@@ -700,7 +669,6 @@ if (isset($_GET['reporte'])) {
                 </a>
             </nav>
 
-            <!-- Bottom Section -->
             <div class="absolute bottom-4 left-3 right-3">
                 <div class="flex items-center justify-between p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
                     <button id="darkModeToggle" class="flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-primary transition-colors duration-300">
@@ -715,12 +683,9 @@ if (isset($_GET['reporte'])) {
         </div>
     </aside>
 
-    <!-- Mobile overlay -->
     <div id="sidebarOverlay" class="fixed inset-0 z-30 bg-black bg-opacity-50 lg:hidden hidden"></div>
 
-    <!-- Main Content -->
     <div class="lg:ml-64">
-        <!-- Header -->
         <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-20">
             <div class="flex items-center justify-between p-4">
                 <div class="flex items-center space-x-4">
@@ -734,7 +699,6 @@ if (isset($_GET['reporte'])) {
                 </div>
 
                 <div class="flex items-center space-x-4">
-                    <!-- Search -->
                     <div class="relative hidden md:block">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <i class="fas fa-search text-gray-400"></i>
@@ -742,13 +706,11 @@ if (isset($_GET['reporte'])) {
                         <input type="text" placeholder="Buscar..." class="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300">
                     </div>
 
-                    <!-- Notifications -->
                     <button class="relative p-2 text-gray-600 dark:text-gray-300 hover:text-primary transition-colors duration-300">
                         <i class="fas fa-bell text-xl"></i>
                         <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
                     </button>
 
-                    <!-- Profile -->
                     <div class="flex items-center space-x-3">
                         <div class="w-10 h-10 bg-gradient-primary rounded-full flex items-center justify-center shadow-lg">
                             <i class="fas fa-user text-white text-sm"></i>
@@ -762,9 +724,7 @@ if (isset($_GET['reporte'])) {
             </div>
         </header>
 
-        <!-- Main Content -->
         <main class="p-6 space-y-8">
-            <!-- Messages -->
             <?php if (isset($mensaje)): ?>
                 <div class="mensaje mensaje-<?php echo $tipo_mensaje; ?>">
                     <i class="fas <?php echo $tipo_mensaje === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'; ?> mr-2"></i>
@@ -772,7 +732,6 @@ if (isset($_GET['reporte'])) {
                 </div>
             <?php endif; ?>
 
-            <!-- Report Info -->
             <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 animate-fade-in border border-gray-100 dark:border-gray-700 card-hover">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
@@ -789,7 +748,6 @@ if (isset($_GET['reporte'])) {
                 ?>
             </div>
 
-            <!-- Add Client Form -->
             <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 animate-slide-up border border-gray-100 dark:border-gray-700 card-hover">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">
                     <i class="fas fa-user-plus mr-2 text-primary"></i>Agregar Nuevo Cliente
@@ -824,7 +782,6 @@ if (isset($_GET['reporte'])) {
                 </form>
             </div>
 
-            <!-- Search Form -->
             <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 animate-slide-up border border-gray-100 dark:border-gray-700 card-hover" style="animation-delay: 0.1s;">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                     <i class="fas fa-search mr-2 text-primary"></i>Buscar Clientes
@@ -842,7 +799,6 @@ if (isset($_GET['reporte'])) {
                 </form>
             </div>
 
-            <!-- Active Clients Table -->
             <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 animate-slide-up border border-gray-100 dark:border-gray-700 card-hover" style="animation-delay: 0.2s;">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                     <i class="fas fa-users mr-2 text-primary"></i>Clientes Activos
@@ -890,7 +846,6 @@ if (isset($_GET['reporte'])) {
                 </div>
             </div>
 
-            <!-- Deleted Clients Table -->
             <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 animate-slide-up border border-gray-100 dark:border-gray-700 card-hover" style="animation-delay: 0.3s;">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                     <i class="fas fa-trash-alt mr-2 text-text-soft-red"></i>Clientes Eliminados
@@ -940,7 +895,6 @@ if (isset($_GET['reporte'])) {
         </main>
     </div>
 
-    <!-- Edit Modal -->
     <div class="fixed inset-0 z-50 hidden bg-black bg-opacity-50" id="editModal">
         <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20">
             <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl transform transition-all max-w-lg w-full">
@@ -978,13 +932,14 @@ if (isset($_GET['reporte'])) {
                             <label for="edit-email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
                             <input type="email" name="email" id="edit-email" class="form-control w-full text-gray-900 dark:text-gray-100 dark:bg-gray-700" required>
                         </div>
-                        <div class="flex justify-end gap-                        <button type="submit" class="bg-primary hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-lg shadow transition duration-200 flex items-center">
-                            <i class="fas fa-save mr-2"></i> Guardar Cambios
-                        </button>
-                        <button type="closeModal" onclick="closeModal()" class="bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg shadow transition duration-200 flex items-center">
-                            <i class="fas fa-times mr-2"></i> Cancelar
-                        </button>
-                    </div>
+                        <div class="flex justify-end gap-4">
+                            <button type="submit" class="bg-primary hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-lg shadow transition duration-200 flex items-center">
+                                <i class="fas fa-save mr-2"></i> Guardar Cambios
+                            </button>
+                            <button type="button" onclick="closeModal()" class="bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg shadow transition duration-200 flex items-center">
+                                <i class="fas fa-times mr-2"></i> Cancelar
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -992,7 +947,6 @@ if (isset($_GET['reporte'])) {
     </div>
 
 <script>
-    // Sidebar Toggle
     const sidebar = document.getElementById('sidebar');
     const sidebarToggle = document.getElementById('sidebarToggle');
     const sidebarOverlay = document.getElementById('sidebarOverlay');
@@ -1007,7 +961,6 @@ if (isset($_GET['reporte'])) {
         sidebarOverlay.classList.add('hidden');
     });
 
-    // Dark Mode Toggle
     const darkModeToggle = document.getElementById('darkModeToggle');
     const themeIcon = document.getElementById('theme-icon');
     const themeText = document.querySelector('.theme-text');
@@ -1036,7 +989,6 @@ if (isset($_GET['reporte'])) {
         updateThemeUI();
     });
 
-    // Modal Functionality
     function openModal() {
         document.getElementById('editModal').classList.remove('hidden');
     }
@@ -1061,7 +1013,6 @@ if (isset($_GET['reporte'])) {
         if (e.target === this) closeModal();
     });
 
-    // Auto-dismiss messages
     setTimeout(() => {
         document.querySelectorAll('.mensaje').forEach(mensaje => mensaje.style.display = 'none');
     }, 3000);
