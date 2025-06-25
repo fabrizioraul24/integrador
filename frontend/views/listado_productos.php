@@ -437,8 +437,8 @@ $result_eliminados = $conn->query($sql_eliminados);
             <!-- Logo -->
             <div class="flex items-center justify-center mb-8 p-4">
                 <div class="relative">
-                    <div class="w-12 h-12 bg-gradient-primary rounded-full flex items-center justify-center shadow-lg animate-pulse-glow">
-                        <i class="fas fa-industry text-white text-xl"></i>
+                    <div class="w-13 h-13 bg-gradient-primary rounded-full flex items-center justify-center shadow-lg animate-pulse-glow overflow-hidden">
+                        <img src="../views/logo/image.jpg" alt="Pil Andina Logo" class="w-full h-full object-cover">
                     </div>
                     <div class="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full animate-bounce-light"></div>
                 </div>
@@ -450,7 +450,7 @@ $result_eliminados = $conn->query($sql_eliminados);
 
             <!-- Navigation -->
             <nav class="space-y-2">
-                <a href="index.php" class="flex items-center p-3 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-primary hover:text-white transition-all duration-300 group card-hover">
+               <a href="../views/dashboard.php" class="flex items-center p-3 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-primary hover:text-white transition-all duration-300 group card-hover">
                     <div class="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center shadow-sm group-hover:shadow-lg transition-all duration-300">
                         <i class="fas fa-tachometer-alt text-white text-sm"></i>
                     </div>

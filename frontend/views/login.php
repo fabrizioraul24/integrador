@@ -151,8 +151,8 @@
             <!-- Logo -->
             <div class="flex justify-center mb-6">
                 <div class="relative">
-                    <div class="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center shadow-lg animate-pulse-glow">
-                        <i class="fas fa-industry text-white text-2xl"></i>
+                    <div class="w-23 h-23 bg-gradient-primary rounded-full flex items-center justify-center shadow-lg animate-pulse-glow overflow-hidden">
+                        <img src="../views/logo/pil.svg" alt="Pil Andina Logo" class="w-full h-full object-cover">
                     </div>
                     <div class="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full animate-bounce-light"></div>
                 </div>

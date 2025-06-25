@@ -43,13 +43,13 @@ if (isset($_GET['action']) && $_GET['action'] === 'login') {
             // Redirigir según el rol
             switch ($user['id_rol']) {
                 case 1: // Administrador
-                    header("Location: ../../../frontend/dash_new/dashboard.php");
+                    header("Location: ../../../frontend/views/dashboard.php");
                     break;
                 case 2: // Vendedor
                     header("Location: ../../../frontend/views/vendedor_dashboard.php");
                     break;
                 case 3: // Comprador
-                    header("Location: ../../../frontend/views/compras.php");
+                    header("Location: ../../../frontend/views/comprador.php");
                     break;
                 default:
                     echo "<script>

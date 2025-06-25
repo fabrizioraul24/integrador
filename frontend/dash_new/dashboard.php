@@ -13,6 +13,20 @@ if ($conn->connect_error) {
     die("Error de conexión: " . $conn->connect_error);
 }
 
+// Obtener correo del usuario logueado
+$email = 'admin@pilandina.com'; // Valor por defecto
+if (isset($_SESSION['id_usuario'])) {
+    $stmt = $conn->prepare("SELECT email FROM usuarios WHERE id_usuario = ?");
+    $stmt->bind_param("i", $_SESSION['id_usuario']);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result->num_rows > 0) {
+        $user = $result->fetch_assoc();
+        $email = htmlspecialchars($user['email'] ?? 'No disponible');
+    }
+    $stmt->close();
+}
+
 function obtenerConteos($conn) {
     $conteos = ['clientes' => 0, 'productos' => 0, 'ventas' => 0];
     try {
@@ -31,6 +45,13 @@ function obtenerConteos($conn) {
 }
 
 $conteos = obtenerConteos($conn);
+
+// Manejo de logout
+if (isset($_GET['logout'])) {
+    session_destroy();
+    header("Location: dashboard.php");
+    exit();
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['mensaje'])) {
     header('Content-Type: application/json');
@@ -439,7 +460,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['mensaje'])) {
 
             <!-- Navigation -->
             <nav class="space-y-2">
-                <a href="index.php" class="flex items-center p-3 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-primary hover:text-white transition-all duration-300 group card-hover">
+               <a href="../views/dashboard.php" class="flex items-center p-3 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-primary hover:text-white transition-all duration-300 group card-hover">
                     <div class="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center shadow-sm group-hover:shadow-lg transition-all duration-300">
                         <i class="fas fa-tachometer-alt text-white text-sm"></i>
                     </div>
@@ -504,7 +525,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['mensaje'])) {
                         <i class="fas fa-sun hidden dark:block"></i>
                         <span class="text-sm font-medium">Tema</span>
                     </button>
-                    <a href="../logout.php" class="text-gray-500 hover:text-red-500 transition-colors duration-300">
+                    <a href="?logout=1" class="text-gray-500 hover:text-red-500 transition-colors duration-300">
                         <i class="fas fa-sign-out-alt"></i>
                     </a>
                 </div>
@@ -526,7 +547,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['mensaje'])) {
                     </button>
                     <div>
                         <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Dashboard Principal</h1>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Bienvenido de vuelta, <?php echo isset($_SESSION['nombre_usu']) ? htmlspecialchars($_SESSION['nombre_usu']) : 'Admin'; ?></p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Bienvenido de vuelta, <?php echo isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombre']) : 'Admin'; ?></p>
                     </div>
                 </div>
 
@@ -551,8 +572,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['mensaje'])) {
                             <i class="fas fa-user text-white text-sm"></i>
                         </div>
                         <div class="hidden md:block">
-                            <p class="text-sm font-medium text-gray-700 dark:text-gray-200"><?php echo isset($_SESSION['nombre_usu']) ? htmlspecialchars($_SESSION['nombre_usu']) : 'Administrador'; ?></p>
-                            <p class="text-xs text-gray-500 dark:text-gray-400">admin@pilandina.com</p>
+                            <p class="text-sm font-medium text-gray-700 dark:text-gray-200"><?php echo isset($_SESSION['nombre']) ? htmlspecialchars($_SESSION['nombre']) : 'Administrador'; ?></p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400"><?php echo $email; ?></p>
                         </div>
                     </div>
                 </div>
