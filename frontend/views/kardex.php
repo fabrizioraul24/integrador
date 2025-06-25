@@ -277,6 +277,13 @@ if (isset($_GET['detalle_id'])) {
                     <span class="ml-3 font-medium">Productos</span>
                 </a>
                 
+                 <a href="../views/categorias.php" class="flex items-center p-3 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-primary hover:text-white transition-all duration-300 group card-hover">
+                    <div class="w-8 h-8 bg-pink-500 rounded-lg flex items-center justify-center shadow-sm group-hover:shadow-lg transition-all duration-300">
+                        <i class="fas fa-tags text-white text-sm"></i>
+                    </div>
+                    <span class="ml-3 font-medium">Categorias</span>
+                </a>
+
                 <a href="../views/traspaso.php" class="flex items-center p-3 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-primary hover:text-white transition-all duration-300 group card-hover">
                     <div class="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center shadow-sm group-hover:shadow-lg transition-all duration-300">
                         <i class="fas fa-exchange-alt text-white text-sm"></i>

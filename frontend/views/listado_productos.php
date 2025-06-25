@@ -159,62 +159,92 @@ function obtener_siguiente_numero($archivo) {
 if (isset($_GET['reporte'])) {
     require('fpdf/fpdf.php');
     date_default_timezone_set('America/La_Paz');
+
+    class PDF extends FPDF {
+        function Header() {
+            $this->Image('../views/logo/sinf.png', 10, 8, 30);
+            $this->SetFont('Arial', 'B', 16);
+            $this->SetTextColor(78, 107, 175);
+            $this->Cell(0, 10, 'REPORTE DE PRODUCTOS - PIL ANDINA', 0, 1, 'C');
+            $this->Ln(5);
+        }
+
+        function Footer() {
+            $this->SetY(-20);
+            $this->SetFont('Arial', 'I', 8);
+            $this->Cell(0, 5, 'Código del documento: ' . $GLOBALS['codigo_reporte'], 0, 1, 'L');
+            $this->Cell(0, 5, 'Página ' . $this->PageNo() . ' de {nb}', 0, 0, 'C');
+        }
+    }
+
     $sql = "SELECT p.*, c.nombre_categoria FROM productos p 
             LEFT JOIN categorias c ON p.id_categoria = c.id_categoria WHERE p.deleted = 0";
     if (!empty($search)) {
-        $sql .= " AND p.nombre_producto LIKE '%$search%'";
+        $sql .= " AND p.nombre_producto LIKE ?";
+        $stmt = $conn->prepare($sql);
+        $search_param = "%$search%";
+        $stmt->bind_param("s", $search_param);
+        $stmt->execute();
+        $result = $stmt->get_result();
+    } else {
+        $result = $conn->query($sql);
     }
-    $result = $conn->query($sql);
+
     $numero_reporte = obtener_siguiente_numero($archivo_numeracion);
     $fecha_actual = date("d-m-Y");
     $hora_actual = date("H-i");
     $codigo_reporte = "REP-$numero_reporte-$fecha_actual-$hora_actual";
-    $pdf = new FPDF('L', 'mm', 'A4');
+
+    $pdf = new PDF('L', 'mm', 'A4');
     $pdf->AddPage();
     $pdf->AliasNbPages();
-    $pdf->SetFont('Arial', 'B', 16);
-    $pdf->SetTextColor(78, 107, 175);
-    $pdf->Cell(0, 10, 'REPORTE DE PRODUCTOS - PIL ANDINA', 0, 1, 'C');
+
     $pdf->SetFont('Arial', 'B', 12);
     $pdf->SetTextColor(255, 0, 0);
-    $pdf->Cell(0, 10, 'Código del Reporte: ' . $codigo_reporte, 0, 1, 'C');
+    $pdf->Cell(0, 10, 'Codigo del Reporte: ' . $codigo_reporte, 0, 1, 'C');
     $pdf->SetTextColor(0, 0, 0);
+
     $pdf->SetFont('Arial', '', 10);
-    $pdf->Cell(40, 7, 'Fecha de generación:', 0, 0);
+    $pdf->Cell(40, 7, 'Fecha de generacion:', 0, 0);
     $pdf->Cell(0, 7, date("d/m/Y H:i:s"), 0, 1);
+
     $usuario_generado = isset($_SESSION['nombre_usu']) ? $_SESSION['nombre_usu'] : 'Desconocido';
     $pdf->Cell(40, 7, 'Generado por:', 0, 0);
     $pdf->Cell(0, 7, $usuario_generado, 0, 1);
+
     $pdf->Ln(10);
+
     $pdf->SetFont('Arial', 'B', 11);
     $pdf->SetFillColor(78, 107, 175);
     $pdf->SetTextColor(255, 255, 255);
     $pdf->Cell(15, 10, '#', 1, 0, 'C', true);
     $pdf->Cell(50, 10, 'PRODUCTO', 1, 0, 'C', true);
-    $pdf->Cell(40, 10, 'PRESENTACIÓN', 1, 0, 'C', true);
-    $pdf->Cell(75, 10, 'DESCRIPCIÓN', 1, 0, 'C', true);
+    $pdf->Cell(40, 10, 'PRESENTACION', 1, 0, 'C', true);
+    $pdf->Cell(75, 10, 'DESCRIPCION', 1, 0, 'C', true);
     $pdf->Cell(30, 10, 'CANTIDAD', 1, 0, 'C', true);
     $pdf->Cell(20, 10, 'PRECIO', 1, 0, 'C', true);
-    $pdf->Cell(40, 10, 'CATEGORÍA', 1, 1, 'C', true);
+    $pdf->Cell(40, 10, 'CATEGORIA', 1, 1, 'C', true);
+
     $pdf->SetFont('Arial', '', 10);
     $pdf->SetTextColor(0, 0, 0);
     $pdf->SetFillColor(240, 245, 255);
+
     $row_num = 0;
     while ($row = $result->fetch_assoc()) {
         $fill = ($row_num % 2) ? true : false;
         $pdf->Cell(15, 8, ++$row_num, 1, 0, 'C', $fill);
-        $pdf->Cell(50, 8, utf8_decode($row['nombre_producto']), 1, 0, 'L', $fill);
-        $pdf->Cell(40, 8, utf8_decode($row['tipo_de_presentacion']), 1, 0, 'L', $fill);
-        $pdf->Cell(75, 8, utf8_decode(substr($row['descripcion'], 0, 50) . (strlen($row['descripcion']) > 50 ? '...' : '')), 1, 0, 'L', $fill);
+        $pdf->Cell(50, 8, $row['nombre_producto'], 1, 0, 'L', $fill);
+        $pdf->Cell(40, 8, $row['tipo_de_presentacion'], 1, 0, 'L', $fill);
+        $pdf->Cell(75, 8, substr($row['descripcion'], 0, 50) . (strlen($row['descripcion']) > 50 ? '...' : ''), 1, 0, 'L', $fill);
         $pdf->Cell(30, 8, $row['cantidad'], 1, 0, 'C', $fill);
         $pdf->Cell(20, 8, number_format($row['precio'], 2), 1, 0, 'C', $fill);
-        $pdf->Cell(40, 8, utf8_decode($row['nombre_categoria']), 1, 1, 'L', $fill);
+        $pdf->Cell(40, 8, $row['nombre_categoria'], 1, 1, 'L', $fill);
     }
-    $pdf->SetY(-20);
-    $pdf->SetFont('Arial', 'I', 8);
-    $pdf->Cell(0, 5, 'Código del documento: ' . $codigo_reporte, 0, 1, 'L');
-    $pdf->Cell(0, 5, 'Página ' . $pdf->PageNo() . ' de {nb}', 0, 0, 'C');
+
     $pdf->Output('I', 'Reporte_Productos_' . $codigo_reporte . '.pdf');
+    if (isset($stmt)) {
+        $stmt->close();
+    }
     exit();
 }
 
@@ -478,6 +508,13 @@ $result_eliminados = $conn->query($sql_eliminados);
                     <span class="ml-3 font-medium">Productos</span>
                 </a>
                 
+                 <a href="../views/categorias.php" class="flex items-center p-3 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-primary hover:text-white transition-all duration-300 group card-hover">
+                    <div class="w-8 h-8 bg-pink-500 rounded-lg flex items-center justify-center shadow-sm group-hover:shadow-lg transition-all duration-300">
+                        <i class="fas fa-tags text-white text-sm"></i>
+                    </div>
+                    <span class="ml-3 font-medium">Categorias</span>
+                </a>
+
                 <a href="../views/traspaso.php" class="flex items-center p-3 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-primary hover:text-white transition-all duration-300 group card-hover">
                     <div class="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center shadow-sm group-hover:shadow-lg transition-all duration-300">
                         <i class="fas fa-exchange-alt text-white text-sm"></i>
@@ -771,9 +808,7 @@ $result_eliminados = $conn->query($sql_eliminados);
                                                 <i class="fas fa-undo mr-1"></i> Restaurar
                                             </button>
                                         </form>
-                                        <a href="?delete_permanent=<?php echo $row['id_producto']; ?>" class="text-red-600 hover:text-red-900" onclick="return confirm('¿Estás seguro de eliminar PERMANENTEMENTE este producto? Esta acción no se puede deshacer.')">
-                                            <i class="fas fa-trash-alt mr-1"></i> Eliminar Definitivamente
-                                        </a>
+                                      
                                     </td>
                                 </tr>
                             <?php endwhile; ?>

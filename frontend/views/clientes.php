@@ -142,41 +142,60 @@ function obtener_siguiente_numero($archivo) {
 // Generar reporte en PDF
 if (isset($_GET['reporte'])) {
     require('fpdf/fpdf.php');
-    
+
+    class PDF extends FPDF {
+        function Header() {
+            $this->Image('../views/logo/sinf.png', 10, 8, 30);
+            $this->SetFont('Arial', 'B', 16);
+            $this->SetTextColor(78, 107, 175);
+            $this->Cell(0, 10, 'REPORTE DE CLIENTES - PIL ANDINA', 0, 1, 'C');
+            $this->Ln(5);
+        }
+
+        function Footer() {
+            $this->SetY(-30);
+            $this->SetFont('Arial', 'I', 8);
+            $this->Cell(0, 5, 'Codigo del documento: ' . $GLOBALS['codigo_reporte'], 0, 1, 'L');
+            $this->Cell(0, 5, 'Pagina ' . $this->PageNo() . ' de {nb}', 0, 0, 'C');
+        }
+    }
+
     $sql = "SELECT * FROM clientes WHERE deleted = 0";
     if (!empty($search)) {
-        $sql = "SELECT * FROM clientes WHERE nombres_y_apellidos LIKE '%$search%' AND deleted = 0";
+        $sql = "SELECT * FROM clientes WHERE nombres_y_apellidos LIKE ? AND deleted = 0";
+        $stmt = $conn->prepare($sql);
+        $search_param = "%$search%";
+        $stmt->bind_param("s", $search_param);
+        $stmt->execute();
+        $result = $stmt->get_result();
+    } else {
+        $result = $conn->query($sql);
     }
-    $result = $conn->query($sql);
-    
+
     $numero_reporte = obtener_siguiente_numero($archivo_numeracion);
     $fecha_actual = date("d-m-Y");
     $hora_actual = date("H:i");
     $codigo_reporte = "$numero_reporte-$fecha_actual-$hora_actual-$numero_reporte";
-    
-    $pdf = new FPDF('P', 'mm', 'A4');
+
+    $pdf = new PDF('P', 'mm', 'A4');
     $pdf->AddPage();
     $pdf->AliasNbPages();
-    
-    $pdf->SetFont('Arial', 'B', 16);
-    $pdf->SetTextColor(78, 107, 175);
-    $pdf->Cell(0, 10, 'REPORTE DE CLIENTES - PIL ANDINA', 0, 1, 'C');
-    
+
     $pdf->SetFont('Arial', 'B', 12);
     $pdf->SetTextColor(255, 0, 0);
     $pdf->Cell(0, 10, 'Codigo del Reporte: ' . $codigo_reporte, 0, 1, 'C');
     $pdf->SetTextColor(0, 0, 0);
-    
+
     $pdf->SetFont('Arial', '', 10);
     $pdf->Cell(40, 7, 'Fecha de generacion:', 0, 0);
     $pdf->Cell(0, 7, date("d/m/Y H:i:s"), 0, 1);
-    
+
     $usuario_generado = isset($_SESSION['nombre_usu']) ? $_SESSION['nombre_usu'] : 'Desconocido';
     $pdf->Cell(40, 7, 'Generado por:', 0, 0);
     $pdf->Cell(0, 7, $usuario_generado, 0, 1);
-    
+
     $pdf->Ln(10);
-    
+
     $pdf->SetFont('Arial', 'B', 11);
     $pdf->SetFillColor(78, 107, 175);
     $pdf->SetTextColor(255, 255, 255);
@@ -185,27 +204,25 @@ if (isset($_GET['reporte'])) {
     $pdf->Cell(70, 10, 'DIRECCION', 1, 0, 'C', true);
     $pdf->Cell(25, 10, 'TELEFONO', 1, 0, 'C', true);
     $pdf->Cell(25, 10, 'NIT', 1, 1, 'C', true);
-    
+
     $pdf->SetFont('Arial', '', 10);
     $pdf->SetTextColor(0, 0, 0);
     $pdf->SetFillColor(240, 245, 255);
-    
+
     $row_num = 0;
     while ($row = $result->fetch_assoc()) {
         $fill = ($row_num % 2) ? true : false;
         $pdf->Cell(15, 8, ++$row_num, 1, 0, 'C', $fill);
-        $pdf->Cell(55, 8, utf8_decode($row['nombres_y_apellidos']), 1, 0, 'L', $fill);
-        $pdf->Cell(70, 8, utf8_decode($row['direccion']), 1, 0, 'L', $fill);
+        $pdf->Cell(55, 8, $row['nombres_y_apellidos'], 1, 0, 'L', $fill);
+        $pdf->Cell(70, 8, $row['direccion'], 1, 0, 'L', $fill);
         $pdf->Cell(25, 8, $row['telefono'], 1, 0, 'C', $fill);
         $pdf->Cell(25, 8, $row['NIT'], 1, 1, 'C', $fill);
     }
-    
-    $pdf->SetY(-30);
-    $pdf->SetFont('Arial', 'I', 8);
-    $pdf->Cell(0, 5, 'Codigo del documento: ' . $codigo_reporte, 0, 1, 'L');
-    $pdf->Cell(0, 5, 'Pagina ' . $pdf->PageNo() . ' de {nb}', 0, 0, 'C');
-    
+
     $pdf->Output('I', 'Reporte_Clientes_' . $codigo_reporte . '.pdf');
+    if (isset($stmt)) {
+        $stmt->close();
+    }
     exit();
 }
 
@@ -469,6 +486,13 @@ $result_eliminados = $conn->query($sql_eliminados);
                     <span class="ml-3 font-medium">Productos</span>
                 </a>
                 
+                <a href="../views/categorias.php" class="flex items-center p-3 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-primary hover:text-white transition-all duration-300 group card-hover">
+                    <div class="w-8 h-8 bg-pink-500 rounded-lg flex items-center justify-center shadow-sm group-hover:shadow-lg transition-all duration-300">
+                        <i class="fas fa-tags text-white text-sm"></i>
+                    </div>
+                    <span class="ml-3 font-medium">Categorias</span>
+                </a>
+
                 <a href="../views/traspaso.php" class="flex items-center p-3 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-primary hover:text-white transition-all duration-300 group card-hover">
                     <div class="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center shadow-sm group-hover:shadow-lg transition-all duration-300">
                         <i class="fas fa-exchange-alt text-white text-sm"></i>
